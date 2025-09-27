@@ -4,11 +4,26 @@ import JournalEntry from '../../../../models/JournalEntry'
 import User from '../../../../models/User'
 import jwt from 'jsonwebtoken'
 
+// In-memory storage for demo mode
+let demoEntries = []
+
 // Get all journal entries for a user
 export async function GET(request) {
   try {
-    // For demo purposes, use a default user ID
-    const userId = 'demo-user-123'
+    // Check for authentication token
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Verify token and get user ID
+    const jwt = require('jsonwebtoken')
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const userId = decoded.userId
 
     try {
       await connectDB()
@@ -19,13 +34,19 @@ export async function GET(request) {
 
       return NextResponse.json({ entries })
     } catch (dbError) {
-      console.log('Database not available, returning empty entries:', dbError)
-      // Return empty entries if database fails
-      return NextResponse.json({ entries: [] })
+      console.log('Database not available, using in-memory storage:', dbError)
+      // Return in-memory entries if database fails
+      return NextResponse.json({ entries: demoEntries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) })
     }
 
   } catch (error) {
     console.error('Get entries error:', error)
+    if (error.name === 'JsonWebTokenError') {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to fetch entries' },
       { status: 500 }
@@ -36,6 +57,21 @@ export async function GET(request) {
 // Create a new journal entry
 export async function POST(request) {
   try {
+    // Check for authentication token
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Verify token and get user ID
+    const jwt = require('jsonwebtoken')
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const userId = decoded.userId
+
     const { journalText, azureAnalysis, athenaResponse } = await request.json()
 
     if (!journalText || !azureAnalysis || !athenaResponse) {
@@ -44,9 +80,6 @@ export async function POST(request) {
         { status: 400 }
       )
     }
-
-    // For demo purposes, use a default user ID
-    const userId = 'demo-user-123'
 
     try {
       await connectDB()
@@ -71,22 +104,32 @@ export async function POST(request) {
         }
       })
     } catch (dbError) {
-      console.log('Database not available, using demo mode:', dbError)
-      // Return success even if database fails
+      console.log('Database not available, using in-memory storage:', dbError)
+      // Store in memory when database fails
+      const entry = {
+        id: 'demo-' + Date.now(),
+        journalText,
+        azureAnalysis,
+        athenaResponse,
+        createdAt: new Date()
+      }
+      
+      demoEntries.push(entry)
+      
       return NextResponse.json({
         message: 'Journal entry processed successfully (demo mode)',
-        entry: {
-          id: 'demo-' + Date.now(),
-          journalText,
-          azureAnalysis,
-          athenaResponse,
-          createdAt: new Date()
-        }
+        entry
       })
     }
 
   } catch (error) {
     console.error('Create entry error:', error)
+    if (error.name === 'JsonWebTokenError') {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to create entry' },
       { status: 500 }
