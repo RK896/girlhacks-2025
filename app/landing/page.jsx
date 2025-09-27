@@ -20,7 +20,7 @@ export default function LandingPage() {
     {
       icon: '📜',
       title: 'Sacred Archives',
-      description: 'Secure, real-time storage of your journal entries with Firebase'
+      description: 'Secure, real-time storage of your journal entries with MongoDB'
     },
     {
       icon: '🏛️',
