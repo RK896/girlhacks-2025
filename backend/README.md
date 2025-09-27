@@ -99,7 +99,7 @@ The server will start on `http://localhost:5000`
 {
   userId: ObjectId,
   journalText: String,
-  azureAnalysis: {
+  sentimentAnalysis: {
     sentiment: String,
     confidenceScores: Object
   },
@@ -149,7 +149,7 @@ All API responses follow this format:
 
 ## Future Enhancements
 
-- [ ] Azure AI integration for sentiment analysis
+- [ ] Sentiment analysis integration
 - [ ] Google Gemini API for Athena responses
 - [ ] Email service for daily reminders
 - [ ] File upload for journal attachments
