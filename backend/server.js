@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+// import fetch from "node-fetch";
 import { body, validationResult } from 'express-validator';
 import multer from 'multer';
 import fs from 'fs';
@@ -14,6 +15,10 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+console.log("Loaded AZURE_REGION:", process.env.AZURE_REGION);
+console.log("Loaded AZURE_SPEECH_KEY:", process.env.AZURE_SPEECH_KEY ? "✅ Present" : "❌ Missing");
+
 
 // Middleware
 app.use(cors({
@@ -403,6 +408,32 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       success: false,
       message: 'Failed to retrieve user profile'
     });
+  }
+});
+
+app.get("/api/token", async (req, res) => {
+  try {
+    const response = await fetch(
+      `https://${process.env.AZURE_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
+      {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.AZURE_SPEECH_KEY,
+          "Content-Length": "0",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Azure token request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const token = await response.text();
+    console.log("✅ Azure token:", token);
+    res.json({ token, region: process.env.AZURE_REGION });
+  } catch (err) {
+    console.error("❌ Azure token error:", err.message);
+    res.status(500).json({ error: "Failed to fetch Azure token" });
   }
 });
 
