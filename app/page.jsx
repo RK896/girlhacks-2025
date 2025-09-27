@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import AuthModal from './components/AuthModal'
 import CalendarStreak from './components/CalendarStreak'
 import SentimentGraph from './components/SentimentGraph'
+import VoiceRecorder from './components/VoiceRecorder'
 
 // Azure AI Analysis Function
 const runAzureAnalysis = async (journalText) => {
@@ -79,6 +80,16 @@ const runDemoMode = async (journalText) => {
 // Journal Form Component
 const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLoading }) => {
   const [journalText, setJournalText] = useState('')
+  const [isRecording, setIsRecording] = useState(false)
+
+  const handleVoiceTranscription = (transcribedText) => {
+    setJournalText(prev => prev + (prev ? ' ' : '') + transcribedText)
+  }
+
+  const handleVoiceSentiment = (sentiment) => {
+    // Store the sentiment for later use in submission
+    console.log('Voice sentiment received:', sentiment)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -198,6 +209,17 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
           <label htmlFor="journalText" className="block text-lg sm:text-xl font-cinzel text-athena-blue mb-4 text-center">
             Share Your Thoughts with the Divine
           </label>
+          
+          {/* Voice Recorder */}
+          <div className="mb-6">
+            <VoiceRecorder 
+              onTranscription={handleVoiceTranscription}
+              onSentiment={handleVoiceSentiment}
+              isRecording={isRecording}
+              setIsRecording={setIsRecording}
+            />
+          </div>
+          
           <div className="relative">
             <textarea
               id="journalText"
