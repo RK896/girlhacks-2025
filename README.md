@@ -1,13 +1,13 @@
 # Athena's Journal 🏛️
 
-A divine journaling experience where ancient Greek wisdom meets modern AI. Share your thoughts and receive counsel from Athena, the goddess of wisdom, powered by Azure AI sentiment analysis and Google's Gemini AI.
+A divine journaling experience where ancient Greek wisdom meets modern AI. Share your thoughts and receive counsel from Athena, the goddess of wisdom, powered by Azure AI sentiment analysis and Google's Gemini AI.                           
 
 ## Features
 
-- **Sacred Interface**: Beautiful Greek temple-inspired UI with marble and gold aesthetics
+- **Sacred Interface**: Beautiful Greek temple-inspired UI with marble and gold aesthetics                                                                      
 - **Azure AI Analysis**: Real-time sentiment analysis of your journal entries
-- **Athena's Oracle**: AI-powered responses in the voice of the ancient Greek goddess
-- **Real-time Storage**: Firebase Firestore integration for persistent journal history
+- **Athena's Oracle**: AI-powered responses in the voice of the ancient Greek goddess                                                                           
+- **Real-time Storage**: Firebase Firestore integration for persistent journal history                                                                          
 - **Mobile Responsive**: Optimized for all devices
 
 ## Tech Stack
@@ -64,7 +64,7 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_actual_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_actual_app_id
 
 # Azure AI Configuration
-NEXT_PUBLIC_AZURE_AI_ENDPOINT=https://your-resource.cognitiveservices.azure.com
+NEXT_PUBLIC_AZURE_AI_ENDPOINT=https://your-resource.cognitiveservices.azure.com 
 NEXT_PUBLIC_AZURE_AI_KEY=your_actual_azure_key
 
 # Gemini API Configuration
@@ -77,25 +77,25 @@ NEXT_PUBLIC_GEMINI_API_KEY=your_actual_gemini_key
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:3000](http://localhost:3000) to view the application.    
 
 ## Usage
 
-1. **Write Your Reflection**: Enter your thoughts in the sacred altar textarea
+1. **Write Your Reflection**: Enter your thoughts in the sacred altar textarea  
 2. **Seek Counsel**: Click "Seek Athena's Counsel" to get divine wisdom
-3. **View Archives**: Scroll down to see your journal history with both your entries and Athena's responses
-4. **Technical Transparency**: Each entry shows the Azure sentiment analysis results
+3. **View Archives**: Scroll down to see your journal history with both your entries and Athena's responses                                                     
+4. **Technical Transparency**: Each entry shows the Azure sentiment analysis results                                                                            
 
 ## Project Structure
 
 ```
 athenas-journal/
 ├── app/
-│   ├── globals.css          # Global styles and Greek temple theme
+│   ├── globals.css          # Global styles and Greek temple theme     
 │   ├── layout.jsx           # Root layout with Cinzel font
-│   └── page.jsx             # Main application with all components
+│   └── page.jsx             # Main application with all components     
 ├── package.json             # Dependencies
-├── tailwind.config.js       # Tailwind configuration with custom colors
+├── tailwind.config.js       # Tailwind configuration with custom colors  
 ├── next.config.js           # Next.js configuration
 └── README.md               # This file
 ```
@@ -104,7 +104,7 @@ athenas-journal/
 
 The app uses a custom Greek temple theme with these colors:
 - `marble-light`: #F8F8F8
-- `marble-dark`: #EAEAEA  
+- `marble-dark`: #EAEAEA
 - `gold-main`: #D4AF37
 - `athena-blue`: #104975
 
@@ -112,7 +112,7 @@ Font: Cinzel (Google Fonts) for headings
 
 ## Contributing
 
-This is a hackathon project built for GirlHacks 2025. Feel free to fork and enhance!
+This is a hackathon project built for GirlHacks 2025. Feel free to fork and enhance!                                                                            
 
 ## License
 
