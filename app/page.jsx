@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from './contexts/AuthContext'
 import AuthModal from './components/AuthModal'
+import CalendarStreak from './components/CalendarStreak'
+import SentimentGraph from './components/SentimentGraph'
 
 // Azure AI Analysis Function
 const runAzureAnalysis = async (journalText) => {
@@ -395,6 +397,7 @@ export default function Home() {
   const [isLoadingEntries, setIsLoadingEntries] = useState(true)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState('login')
+  const [activeTab, setActiveTab] = useState('journal')
 
   // Load journal entries
   useEffect(() => {
@@ -535,9 +538,9 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-4xl mx-auto">
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12 fade-in">
+        <div className="text-center mb-8 fade-in">
           <h1 className="temple-header mb-6">
             Athena's Journal
           </h1>
@@ -574,17 +577,62 @@ export default function Home() {
           )}
         </div>
 
-        {/* Journal Form */}
-        <JournalForm 
-          onSubmit={handleJournalSubmit} 
-          isLoading={isLoading} 
-          loadingStep={loadingStep}
-          setLoadingStep={setLoadingStep}
-          setIsLoading={setIsLoading}
-        />
+        {/* Tab Navigation */}
+        {currentUser && (
+          <div className="flex justify-center mb-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-1 border border-gold-main/30">
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => setActiveTab('journal')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'journal'
+                      ? 'bg-athena-blue text-white'
+                      : 'text-gray-600 hover:text-athena-blue'
+                  }`}
+                >
+                  📜 Journal
+                </button>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'dashboard'
+                      ? 'bg-athena-blue text-white'
+                      : 'text-gray-600 hover:text-athena-blue'
+                  }`}
+                >
+                  📊 Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Journal History */}
-        <JournalHistory entries={entries} isLoading={isLoadingEntries} />
+        {/* Tab Content */}
+        {activeTab === 'journal' && (
+          <>
+            {/* Journal Form */}
+            <JournalForm 
+              onSubmit={handleJournalSubmit} 
+              isLoading={isLoading} 
+              loadingStep={loadingStep}
+              setLoadingStep={setLoadingStep}
+              setIsLoading={setIsLoading}
+            />
+
+            {/* Journal History */}
+            <JournalHistory entries={entries} isLoading={isLoadingEntries} />
+          </>
+        )}
+
+        {activeTab === 'dashboard' && currentUser && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Calendar Streak */}
+            <CalendarStreak entries={entries} />
+            
+            {/* Sentiment Graph */}
+            <SentimentGraph entries={entries} />
+          </div>
+        )}
       </div>
 
       {/* Auth Modal */}
