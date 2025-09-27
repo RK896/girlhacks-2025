@@ -18,8 +18,11 @@ export async function POST(request) {
       size: audioFile.size
     })
 
+    // Convert File to ArrayBuffer
+    const audioBuffer = await audioFile.arrayBuffer()
+    
     // Check audio file size - if too small, it might not contain speech
-    if (audioFile.size < 1000) {
+    if (audioBuffer.byteLength < 1000) {
       console.log('Audio file too small, might not contain speech')
       return NextResponse.json({
         transcribedText: '',
@@ -35,37 +38,70 @@ export async function POST(request) {
       })
     }
     
-    console.log('Audio file size:', audioFile.size, 'bytes')
+    console.log('Audio buffer size:', audioBuffer.byteLength, 'bytes')
     
-    // Use OpenAI Whisper API for speech-to-text
-    const whisperFormData = new FormData()
-    whisperFormData.append('file', audioFile, 'audio.webm')
-    whisperFormData.append('model', 'whisper-1')
-    whisperFormData.append('language', 'en')
+    // Convert audio to base64 for Google Cloud Speech-to-Text
+    const base64Audio = Buffer.from(audioBuffer).toString('base64')
     
-    console.log('Sending to OpenAI Whisper API...')
+    // Determine audio encoding based on file type
+    let encoding = 'WEBM_OPUS'
+    let sampleRateHertz = 48000 // Default to 48kHz for WebM
     
-    const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: whisperFormData
-    })
-    
-    console.log('Whisper API response status:', whisperResponse.status)
-    
-    if (!whisperResponse.ok) {
-      const errorText = await whisperResponse.text()
-      console.error('Whisper API error:', errorText)
-      throw new Error(`Whisper API error: ${whisperResponse.status} - ${errorText}`)
+    if (audioFile.type.includes('wav')) {
+      encoding = 'LINEAR16'
+      sampleRateHertz = 16000 // WAV typically uses 16kHz
+    } else if (audioFile.type.includes('mp4')) {
+      encoding = 'MP4'
+      sampleRateHertz = 48000 // MP4 typically uses 48kHz
+    } else if (audioFile.type.includes('webm')) {
+      encoding = 'WEBM_OPUS'
+      sampleRateHertz = 48000 // WebM Opus typically uses 48kHz
     }
     
-    const whisperData = await whisperResponse.json()
-    console.log('Whisper API response:', whisperData)
+    console.log('Using audio encoding:', encoding)
+    console.log('Using sample rate:', sampleRateHertz)
     
-    const transcribedText = whisperData.text || ''
+    // Google Cloud Speech-to-Text API request
+    const speechRequest = {
+      config: {
+        encoding: encoding,
+        sampleRateHertz: sampleRateHertz,
+        languageCode: 'en-US',
+        enableAutomaticPunctuation: true,
+        model: 'latest_long'
+      },
+      audio: {
+        content: base64Audio
+      }
+    }
+    
+    console.log('Calling Google Cloud Speech-to-Text API...')
+    
+    const speechResponse = await fetch(`https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_CLOUD_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(speechRequest)
+    })
+    
+    console.log('Google Speech API response status:', speechResponse.status)
+    
+    if (!speechResponse.ok) {
+      const errorText = await speechResponse.text()
+      console.error('Google Speech API error:', errorText)
+      throw new Error(`Google Speech API error: ${speechResponse.status} - ${errorText}`)
+    }
+    
+    const speechData = await speechResponse.json()
+    console.log('Google Speech API response:', JSON.stringify(speechData, null, 2))
+    
+    // Extract transcribed text from Google's response
+    const transcribedText = speechData.results?.[0]?.alternatives?.[0]?.transcript || ''
+    const confidence = speechData.results?.[0]?.alternatives?.[0]?.confidence || 0
+    
     console.log('Transcribed text:', transcribedText)
+    console.log('Confidence:', confidence)
     
     // If no text was transcribed, provide a helpful message
     if (!transcribedText || transcribedText.trim() === '') {
@@ -115,10 +151,10 @@ export async function POST(request) {
     console.error('Speech-to-text analysis failed:', error)
     
     // Check if it's an environment variable issue
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('Missing OpenAI API key')
+    if (!process.env.GOOGLE_CLOUD_API_KEY) {
+      console.error('Missing Google Cloud API key')
       return NextResponse.json({
-        error: 'OpenAI API key not configured. Please check environment variables.',
+        error: 'Google Cloud Speech-to-Text not configured. Please check environment variables.',
         transcribedText: '',
         sentiment: {
           sentiment: 'neutral',

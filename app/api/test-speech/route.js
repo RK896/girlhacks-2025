@@ -23,19 +23,35 @@ export async function GET() {
     let speechTest = 'Not tested'
     if (hasEndpoint && hasKey) {
       try {
-        // Extract region and construct the proper speech endpoint
-        const region = process.env.AZURE_SPEECH_ENDPOINT.replace('https://', '').replace('.api.cognitive.microsoft.com', '')
-        const testEndpoint = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US`
-        console.log('Testing endpoint:', testEndpoint)
+        // Test multiple endpoint formats
+        const endpoints = [
+          'https://eastus2.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US',
+          'https://eastus2.api.cognitive.microsoft.com/sts/v1.0/issuetoken',
+          'https://eastus2.cognitiveservices.azure.com/sts/v1.0/issuetoken'
+        ]
         
-        // Try a simple GET request to check connectivity
-        const testResponse = await fetch(testEndpoint, {
-          method: 'GET',
-          headers: {
-            'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY,
+        let workingEndpoint = null
+        for (const endpoint of endpoints) {
+          try {
+            console.log('Testing endpoint:', endpoint)
+            const testResponse = await fetch(endpoint, {
+              method: endpoint.includes('issuetoken') ? 'POST' : 'GET',
+              headers: {
+                'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY,
+                'Content-Type': endpoint.includes('issuetoken') ? 'application/x-www-form-urlencoded' : 'application/json'
+              }
+            })
+            
+            if (testResponse.ok || testResponse.status === 200) {
+              workingEndpoint = endpoint
+              break
+            }
+          } catch (e) {
+            console.log(`Endpoint ${endpoint} failed:`, e.message)
           }
-        })
-        speechTest = testResponse.ok ? 'Connected' : `Error: ${testResponse.status} - ${testResponse.statusText}`
+        }
+        
+        speechTest = workingEndpoint ? `Connected to ${workingEndpoint}` : 'All endpoints failed'
       } catch (err) {
         speechTest = `Error: ${err.message}`
         console.error('Speech test error:', err)
