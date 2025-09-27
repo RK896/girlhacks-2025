@@ -3,27 +3,74 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
     setLoading(true);
     
-    // TODO: Implement Firebase Auth login when Supabase is connected
-    console.log("Login attempt:", { email, password });
-    
-    // Simulate loading
-    setTimeout(() => {
+    // Client-side validation
+    if (!email || !password) {
+      setError("Please fill in all fields");
       setLoading(false);
-      alert("Please connect Supabase to enable authentication");
-    }, 1000);
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password: password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message);
+        
+        // Store token and user data
+        localStorage.setItem('athena_token', data.data.token);
+        localStorage.setItem('athena_user', JSON.stringify(data.data.user));
+        
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate('/journal');
+        }, 2000);
+      } else {
+        setError(data.message || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Unable to connect to Athena\'s Oracle. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +100,26 @@ const Login = () => {
           </CardHeader>
           
           <CardContent>
+            {/* Error Alert */}
+            {error && (
+              <Alert className="mb-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Success Alert */}
+            {success && (
+              <Alert className="mb-4 border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  {success}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-medium">
@@ -119,11 +186,11 @@ const Login = () => {
           </CardContent>
         </Card>
 
-        {/* Supabase Notice */}
+        {/* Backend Notice */}
         <div className="mt-6 p-4 prophecy-reveal rounded-lg">
           <p className="text-sm text-center">
-            <strong className="divine-text">Oracle's Notice:</strong> Authentication requires Supabase integration. 
-            Connect via the green Supabase button to enable login functionality.
+            <strong className="divine-text">Oracle's Notice:</strong> Athena's backend server must be running 
+            on port 5000 for login to work. Start the server with <code className="bg-muted px-1 rounded">npm run dev</code> in the backend folder.
           </p>
         </div>
       </div>

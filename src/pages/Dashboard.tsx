@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { LogOut, Scroll, Sparkles, Clock, Calendar, BookOpen } from "lucide-react";
 import JournalCalendar from "@/components/JournalCalendar";
+import SpeechRecorder from "@/components/SpeechRecorder";
 
 // Mock data for demonstration
 const mockEntries = [
@@ -48,19 +49,23 @@ const Dashboard = () => {
     
     setIsSubmitting(true);
     
-    // TODO: Implement full AI flow when Supabase is connected:
+    // TODO: Implement full AI flow when backend is connected:
     // 1. Azure AI sentiment analysis
     // 2. Gemini API for Athena's prophecy
     // 3. Save to database
     
     console.log("Journal submission:", journalText);
-    
+
     // Simulate processing
     setTimeout(() => {
       setIsSubmitting(false);
       setJournalText("");
-      alert("Please connect Supabase to enable full AI processing and data storage");
+      alert("Journal entry submitted! (Backend integration pending)");
     }, 2000);
+  };
+
+  const handleSpeechTranscription = (transcribedText: string) => {
+    setJournalText(prev => prev + (prev ? ' ' : '') + transcribedText);
   };
 
   const handleLogout = () => {
@@ -155,6 +160,17 @@ const Dashboard = () => {
                           placeholder="Describe your professional experience today... What challenges did you face? What successes did you achieve? How did you grow?"
                           className="min-h-32 resize-none"
                           rows={6}
+                        />
+                      </div>
+
+                      {/* Speech Recognition */}
+                      <div className="space-y-2">
+                        <label className="font-medium text-wisdom-blue font-athena text-lg">
+                          🎤 Or Speak Your Thoughts
+                        </label>
+                        <SpeechRecorder 
+                          onTranscription={handleSpeechTranscription}
+                          disabled={isSubmitting}
                         />
                       </div>
                       

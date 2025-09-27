@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -17,6 +19,8 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,27 +28,65 @@ const SignUp = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
     
+    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
     
     if (formData.password.length < 6) {
-      alert("Password must be at least 6 characters");
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    // Enhanced password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    if (!passwordRegex.test(formData.password)) {
+      setError("Password must contain at least one lowercase letter, one uppercase letter, and one number");
       return;
     }
     
     setLoading(true);
     
-    // TODO: Implement Firebase Auth signup when Supabase is connected
-    console.log("Signup attempt:", formData);
-    
-    // Simulate loading
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message);
+        
+        // Store token and user data
+        localStorage.setItem('athena_token', data.data.token);
+        localStorage.setItem('athena_user', JSON.stringify(data.data.user));
+        
+        // Redirect to dashboard after successful signup
+        setTimeout(() => {
+          navigate('/journal');
+        }, 2000);
+      } else {
+        setError(data.message || 'Signup failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError('Unable to connect to Athena\'s Oracle. Please check your connection and try again.');
+    } finally {
       setLoading(false);
-      alert("Please connect Supabase to enable authentication");
-    }, 1000);
+    }
   };
 
   return (
@@ -74,6 +116,26 @@ const SignUp = () => {
           </CardHeader>
           
           <CardContent>
+            {/* Error Alert */}
+            {error && (
+              <Alert className="mb-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Success Alert */}
+            {success && (
+              <Alert className="mb-4 border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  {success}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSignUp} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -139,6 +201,9 @@ const SignUp = () => {
                     required
                     className="h-11 pr-10"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Must contain uppercase, lowercase, and number
+                  </p>
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -200,13 +265,14 @@ const SignUp = () => {
           </CardContent>
         </Card>
 
-        {/* Supabase Notice */}
+        {/* Backend Notice */}
         <div className="mt-6 p-4 prophecy-reveal rounded-lg">
           <p className="text-sm text-center">
-            <strong className="divine-text">Oracle's Notice:</strong> Authentication requires Supabase integration. 
-            Connect via the green Supabase button to enable account creation.
+            <strong className="divine-text">Oracle's Notice:</strong> Athena's backend server must be running 
+            on port 5000 for account creation to work. Start the server with <code className="bg-muted px-1 rounded">npm run dev</code> in the backend folder.
           </p>
         </div>
+        
       </div>
     </div>
   );
