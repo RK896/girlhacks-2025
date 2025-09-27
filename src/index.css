@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Greek-inspired Design System for Athena's Journal
+   All colors are HSL for proper theming */
+
+@layer base {
+  :root {
+    /* Greek Stone & Marble Background */
+    --background: 36 17% 95%;                  /* Off-white stone */
+    --foreground: 210 29% 24%;                /* Dark marble text */
+
+    /* Card & Surface Colors */
+    --card: 0 0% 100%;                        /* Pure white marble */
+    --card-foreground: 210 29% 24%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 29% 24%;
+
+    /* Wisdom Blue - Primary Brand */
+    --primary: 203 76% 25%;                   /* #104975 - Deep wisdom blue */
+    --primary-foreground: 0 0% 100%;
+
+    /* Divine Gold - Secondary Accent */
+    --secondary: 43 77% 52%;                  /* #D4AF37 - Divine gold */
+    --secondary-foreground: 210 29% 24%;
+
+    /* Muted Temple Stone */
+    --muted: 36 17% 92%;                      /* Light stone */
+    --muted-foreground: 210 15% 45%;
+
+    /* Oracle's Accent */
+    --accent: 43 77% 52%;                     /* Divine gold */
+    --accent-foreground: 210 29% 24%;
+
+    /* Alert & Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs - Subtle stone */
+    --border: 36 17% 87%;
+    --input: 36 17% 87%;
+    --ring: 203 76% 25%;
+
+    --radius: 0.75rem;                        /* Rounded for elegance */
+
+    /* Custom Greek Theme Variables */
+    --wisdom-blue: 203 76% 25%;               /* #104975 */
+    --divine-gold: 43 77% 52%;                /* #D4AF37 */
+    --marble-white: 0 0% 100%;
+    --stone-bg: 36 17% 95%;
+    --oracle-glow: 43 77% 85%;                /* Light gold glow */
+    
+    /* Gradients */
+    --gradient-athena: linear-gradient(135deg, hsl(var(--wisdom-blue)), hsl(var(--divine-gold)));
+    --gradient-marble: linear-gradient(180deg, hsl(var(--marble-white)), hsl(var(--stone-bg)));
+    --gradient-prophecy: linear-gradient(90deg, hsl(var(--oracle-glow)), hsl(var(--marble-white)));
+
+    /* Shadows */
+    --shadow-temple: 0 10px 40px -10px hsl(var(--wisdom-blue) / 0.15);
+    --shadow-oracle: 0 0 30px hsl(var(--divine-gold) / 0.3);
+    --shadow-wisdom: 0 20px 60px -20px hsl(var(--wisdom-blue) / 0.25);
+
+    /* Typography */
+    --font-athena: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  .dark {
+    --background: 210 29% 12%;               /* Dark marble */
+    --foreground: 36 17% 95%;               /* Light stone text */
+
+    --card: 210 29% 15%;
+    --card-foreground: 36 17% 95%;
+
+    --popover: 210 29% 15%;
+    --popover-foreground: 36 17% 95%;
+
+    --primary: 43 77% 52%;                   /* Divine gold in dark */
+    --primary-foreground: 210 29% 12%;
+
+    --secondary: 203 76% 35%;                /* Lighter wisdom blue */
+    --secondary-foreground: 36 17% 95%;
+
+    --muted: 210 29% 18%;
+    --muted-foreground: 36 17% 70%;
+
+    --accent: 43 77% 52%;
+    --accent-foreground: 210 29% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 36 17% 95%;
+
+    --border: 210 29% 18%;
+    --input: 210 29% 18%;
+    --ring: 43 77% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-athena);
+  }
+}
+
+@layer components {
+  /* Athena's Design Components */
+  .temple-column {
+    background: linear-gradient(180deg, 
+      hsl(var(--marble-white)), 
+      hsl(var(--stone-bg))
+    );
+    border-left: 4px solid hsl(var(--divine-gold));
+    box-shadow: var(--shadow-temple);
+  }
+
+  .oracle-seal {
+    background: var(--gradient-athena);
+    box-shadow: var(--shadow-oracle);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .oracle-seal:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-wisdom);
+  }
+
+  .prophecy-reveal {
+    background: var(--gradient-prophecy);
+    border-left: 4px solid hsl(var(--divine-gold));
+    box-shadow: var(--shadow-temple);
+  }
+
+  .wisdom-text {
+    color: hsl(var(--wisdom-blue));
+    font-family: var(--font-athena);
+  }
+
+  .divine-text {
+    color: hsl(var(--divine-gold));
+    font-family: var(--font-athena);
+  }
+}
