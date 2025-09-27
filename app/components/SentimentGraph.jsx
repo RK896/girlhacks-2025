@@ -69,10 +69,12 @@ export default function SentimentGraph({ entries }) {
   }
 
   const getSentimentLabel = (sentiment) => {
-    if (sentiment > 0) return 'Positive'
-    if (sentiment < 0) return 'Negative'
+    if (sentiment > 0.3) return 'Positive'
+    if (sentiment < -0.3) return 'Negative'
     return 'Neutral'
   }
+
+  const maxSentiment = Math.max(...graphData.map(d => Math.abs(d.sentiment)), 1)
 
   return (
     <div className="temple-container p-6 mb-8">
@@ -107,60 +109,8 @@ export default function SentimentGraph({ entries }) {
           <div className="absolute left-0 top-0 text-xs text-green-600 font-medium">+</div>
           <div className="absolute left-0 bottom-0 text-xs text-red-600 font-medium">-</div>
           
-          {/* Data points and connecting lines */}
+          {/* Data points */}
           <div className="relative h-full">
-            {/* SVG for connecting lines */}
-            {graphData.length > 1 && (
-              <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-                {graphData.map((point, index) => {
-                  if (index === 0) return null
-                  
-                  const prevPoint = graphData[index - 1]
-                  const isPositive = point.sentiment > 0
-                  const isNegative = point.sentiment < 0
-                  const isNeutral = point.sentiment === 0
-                  const prevIsPositive = prevPoint.sentiment > 0
-                  const prevIsNegative = prevPoint.sentiment < 0
-                  const prevIsNeutral = prevPoint.sentiment === 0
-                  
-                  // Calculate positions
-                  const position = isPositive ? 0.2 : isNegative ? 0.8 : 0.5
-                  const prevPosition = prevIsPositive ? 0.2 : prevIsNegative ? 0.8 : 0.5
-                  const leftPosition = (index / Math.max(graphData.length - 1, 1)) * 100
-                  const prevLeftPosition = ((index - 1) / Math.max(graphData.length - 1, 1)) * 100
-                  
-                  // Convert percentages to actual coordinates
-                  const x1 = (prevLeftPosition / 100) * 100 // SVG width is 100%
-                  const y1 = prevPosition * 100 // SVG height is 100%
-                  const x2 = (leftPosition / 100) * 100
-                  const y2 = position * 100
-                  
-                  // Determine line color based on sentiment trend
-                  let lineColor = '#9CA3AF' // default gray
-                  if (point.sentiment > prevPoint.sentiment) {
-                    lineColor = '#10B981' // green for improvement
-                  } else if (point.sentiment < prevPoint.sentiment) {
-                    lineColor = '#EF4444' // red for decline
-                  }
-                  
-                  return (
-                    <line
-                      key={`line-${index}`}
-                      x1={`${x1}%`}
-                      y1={`${y1}%`}
-                      x2={`${x2}%`}
-                      y2={`${y2}%`}
-                      stroke={lineColor}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      opacity="0.7"
-                    />
-                  )
-                })}
-              </svg>
-            )}
-            
-            {/* Data points */}
             {graphData.map((point, index) => {
               const isPositive = point.sentiment > 0
               const isNegative = point.sentiment < 0
@@ -176,8 +126,7 @@ export default function SentimentGraph({ entries }) {
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   style={{
                     left: `${leftPosition}%`,
-                    top: `${position * 100}%`,
-                    zIndex: 2
+                    top: `${position * 100}%`
                   }}
                 >
                   {/* Data point */}
