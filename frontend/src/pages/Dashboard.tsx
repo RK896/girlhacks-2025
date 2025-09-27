@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { LogOut, Scroll, Sparkles, Clock, Calendar, BookOpen } from "lucide-react";
 import JournalCalendar from "@/components/JournalCalendar";
 import SpeechRecorder from "@/components/SpeechRecorder";
-
+import SpeechRecorderAzure from "@/components/SpeechRecorderAzure";
 // Mock data for demonstration
 const mockEntries = [
   {
@@ -166,9 +166,9 @@ const Dashboard = () => {
                       {/* Speech Recognition */}
                       <div className="space-y-2">
                         <label className="font-medium text-wisdom-blue font-athena text-lg">
-                          🎤 Or Speak Your Thoughts
+                          🎤 Or Speak Your Thoughts   
                         </label>
-                        <SpeechRecorder 
+                        <SpeechRecorderAzure 
                           onTranscription={handleSpeechTranscription}
                           disabled={isSubmitting}
                         />
