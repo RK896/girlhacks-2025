@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+# girlhacks-2025
+=======
 # Welcome to your Lovable project
 
 ## Project info
@@ -71,5 +74,4 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
-
-# girlhacks-2025
+>>>>>>> ad568219f8cbc300f55dd31f5d34df9154d4719c
