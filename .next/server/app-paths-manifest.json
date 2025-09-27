@@ -1,7 +1,6 @@
 {
-  "/not-found": "app/not-found.js",
-  "/landing/page": "app/landing/page.js",
   "/page": "app/page.js",
+  "/landing/page": "app/landing/page.js",
   "/api/journal/entries/route": "app/api/journal/entries/route.js",
-  "/api/auth/me/route": "app/api/auth/me/route.js"
+  "/api/auth/login/route": "app/api/auth/login/route.js"
 }
