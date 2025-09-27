@@ -2,21 +2,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { LogOut, Scroll, Sparkles, Clock, Calendar, BookOpen } from "lucide-react";
 import JournalCalendar from "@/components/JournalCalendar";
 import SpeechRecorder from "@/components/SpeechRecorder";
-import SpeechRecorderAzure from "@/components/SpeechRecorderAzure";
 // Mock data for demonstration
 const mockEntries = [
   {
     id: 1,
     timestamp: new Date("2024-01-15T10:30:00"),
     journalText: "Today I led my first team meeting. I felt nervous initially, but gained confidence as we discussed the project roadmap. The team seemed engaged and asked thoughtful questions.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: "positive",
       confidenceScores: { positive: 0.82, neutral: 0.15, negative: 0.03 }
     },
@@ -26,7 +25,7 @@ const mockEntries = [
     id: 2,
     timestamp: new Date("2024-01-14T16:45:00"),
     journalText: "Had a challenging conversation with a difficult client today. They were unhappy with our deliverables and raised their voice. I managed to stay calm and professional, but it was draining.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: "neutral",
       confidenceScores: { positive: 0.25, neutral: 0.55, negative: 0.20 }
     },
@@ -41,19 +40,19 @@ const Dashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!journalText.trim()) {
       alert("Please enter your journal reflection");
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     // TODO: Implement full AI flow when backend is connected:
-    // 1. Azure AI sentiment analysis
+    // 1. Sentiment analysis
     // 2. Gemini API for Athena's prophecy
     // 3. Save to database
-    
+
     console.log("Journal submission:", journalText);
 
     // Simulate processing
@@ -69,7 +68,7 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    // TODO: Implement logout when Firebase Auth is connected
+    // TODO: Implement logout when authentication is connected
     alert("Logout functionality requires Supabase authentication");
   };
 
@@ -168,7 +167,7 @@ const Dashboard = () => {
                         <label className="font-medium text-wisdom-blue font-athena text-lg">
                           🎤 Or Speak Your Thoughts   
                         </label>
-                        <SpeechRecorderAzure 
+                        <SpeechRecorder 
                           onTranscription={handleSpeechTranscription}
                           disabled={isSubmitting}
                         />
@@ -229,8 +228,8 @@ const Dashboard = () => {
                               <p className="text-sm text-muted-foreground font-medium">
                                 {formatDate(entry.timestamp)}
                               </p>
-                              <Badge className={getSentimentColor(entry.azureAnalysis.sentiment)}>
-                                {entry.azureAnalysis.sentiment}
+                              <Badge className={getSentimentColor(entry.sentimentAnalysis.sentiment)}>
+                                {entry.sentimentAnalysis.sentiment}
                               </Badge>
                             </div>
 
@@ -267,7 +266,7 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Supabase Integration Notice */}
+        {/* Integration Notice */}
         <div className="mt-8">
           <Card className="prophecy-reveal">
             <CardContent className="p-6 text-center">
@@ -275,13 +274,13 @@ const Dashboard = () => {
                 🔮 Unlock Full Oracle Powers
               </h3>
               <p className="text-muted-foreground mb-4">
-                Connect Supabase to enable AI sentiment analysis, personalized Athena prophecies, 
+                Connect your backend to enable AI sentiment analysis, personalized Athena prophecies, 
                 and permanent storage of your wisdom archive.
               </p>
               <div className="flex flex-wrap gap-4 justify-center text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-divine-gold rounded-full"></div>
-                  <span>Azure AI Sentiment Analysis</span>
+                  <span>Sentiment Analysis</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-divine-gold rounded-full"></div>

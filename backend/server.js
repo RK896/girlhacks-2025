@@ -16,10 +16,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-console.log("Loaded AZURE_REGION:", process.env.AZURE_REGION);
-console.log("Loaded AZURE_SPEECH_KEY:", process.env.AZURE_SPEECH_KEY ? "✅ Present" : "❌ Missing");
-
-
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:8080',
@@ -135,7 +131,7 @@ const journalEntrySchema = new mongoose.Schema({
     required: [true, 'Journal text is required'],
     maxlength: [5000, 'Journal entry cannot exceed 5000 characters']
   },
-  azureAnalysis: {
+  sentimentAnalysis: {
     sentiment: {
       type: String,
       enum: ['positive', 'negative', 'neutral'],
@@ -411,41 +407,17 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/api/token", async (req, res) => {
-  try {
-    const response = await fetch(
-      `https://${process.env.AZURE_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
-      {
-        method: "POST",
-        headers: {
-          "Ocp-Apim-Subscription-Key": process.env.AZURE_SPEECH_KEY,
-          "Content-Length": "0",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Azure token request failed: ${response.status} ${response.statusText}`);
-    }
-
-    const token = await response.text();
-    console.log("✅ Azure token:", token);
-    res.json({ token, region: process.env.AZURE_REGION });
-  } catch (err) {
-    console.error("❌ Azure token error:", err.message);
-    res.status(500).json({ error: "Failed to fetch Azure token" });
-  }
-});
+//
 
 // Create journal entry (protected route)
 app.post('/api/journal/entry', authenticateToken, async (req, res) => {
   try {
-    const { journalText, azureAnalysis, athenaResponse } = req.body;
+    const { journalText, sentimentAnalysis, athenaResponse } = req.body;
 
-    if (!journalText || !azureAnalysis || !athenaResponse) {
+    if (!journalText || !sentimentAnalysis || !athenaResponse) {
       return res.status(400).json({
         success: false,
-        message: 'Journal text, analysis, and Athena\'s response are required'
+        message: 'Journal text, sentiment analysis, and Athena\'s response are required'
       });
     }
 
@@ -455,7 +427,7 @@ app.post('/api/journal/entry', authenticateToken, async (req, res) => {
     const newEntry = new JournalEntry({
       userId: req.user._id,
       journalText,
-      azureAnalysis,
+      sentimentAnalysis,
       athenaResponse,
       date
     });
@@ -536,14 +508,9 @@ app.post('/api/journal/transcribe-audio', authenticateToken, upload.single('audi
     }
 
     const audioFile = req.file;
-    console.log('📢 Audio file received:', audioFile.filename);
-    console.log('📢 File size:', audioFile.size, 'bytes');
-    console.log('📢 MIME type:', audioFile.mimetype);
-
     // For now, we'll simulate transcription
-    // In production, you would integrate with services like:
+    // In production, you would integrate with a speech-to-text service like:
     // - Google Cloud Speech-to-Text
-    // - Azure Speech Services
     // - AWS Transcribe
     // - OpenAI Whisper API
 
@@ -552,8 +519,6 @@ app.post('/api/journal/transcribe-audio', authenticateToken, upload.single('audi
 
     // Mock transcription result
     const mockTranscription = "This is a simulated transcription of your audio journal entry. In a real implementation, this would be the actual transcribed text from your audio recording.";
-
-    // Clean up the uploaded file (optional - you might want to keep it for processing)
     // fs.unlinkSync(audioFile.path);
 
     res.json({

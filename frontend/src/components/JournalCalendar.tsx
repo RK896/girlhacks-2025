@@ -20,7 +20,7 @@ interface JournalEntry {
   id: string;
   date: string;
   journalText: string;
-  azureAnalysis: {
+  sentimentAnalysis: {
     sentiment: 'positive' | 'negative' | 'neutral';
     confidenceScores: {
       positive: number;
@@ -45,7 +45,7 @@ const mockJournalEntries: JournalEntry[] = [
     id: '1',
     date: '2024-01-15',
     journalText: "Today I led my first team meeting. I felt nervous initially, but gained confidence as we discussed the project roadmap. The team seemed engaged and asked thoughtful questions.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: 'positive',
       confidenceScores: { positive: 0.82, neutral: 0.15, negative: 0.03 }
     },
@@ -56,7 +56,7 @@ const mockJournalEntries: JournalEntry[] = [
     id: '2',
     date: '2024-01-14',
     journalText: "Had a challenging conversation with a difficult client today. They were unhappy with our deliverables and raised their voice. I managed to stay calm and professional, but it was draining.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: 'neutral',
       confidenceScores: { positive: 0.25, neutral: 0.55, negative: 0.20 }
     },
@@ -67,7 +67,7 @@ const mockJournalEntries: JournalEntry[] = [
     id: '3',
     date: '2024-01-13',
     journalText: "Completed a major project milestone today. The team worked incredibly well together and we delivered ahead of schedule. Feeling proud of what we accomplished.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: 'positive',
       confidenceScores: { positive: 0.91, neutral: 0.08, negative: 0.01 }
     },
@@ -78,7 +78,7 @@ const mockJournalEntries: JournalEntry[] = [
     id: '4',
     date: '2024-01-12',
     journalText: "Struggled with self-doubt today. Made a mistake in my presentation and felt like I let the team down. Need to work on my confidence.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: 'negative',
       confidenceScores: { positive: 0.15, neutral: 0.30, negative: 0.55 }
     },
@@ -89,7 +89,7 @@ const mockJournalEntries: JournalEntry[] = [
     id: '5',
     date: '2024-01-11',
     journalText: "Attended a networking event today. Met some interesting people and learned about new opportunities in the industry. Feeling optimistic about future prospects.",
-    azureAnalysis: {
+    sentimentAnalysis: {
       sentiment: 'positive',
       confidenceScores: { positive: 0.78, neutral: 0.18, negative: 0.04 }
     },
@@ -148,7 +148,7 @@ const JournalCalendar: React.FC = () => {
     const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
     
     entries.forEach(entry => {
-      sentimentCounts[entry.azureAnalysis.sentiment]++;
+      sentimentCounts[entry.sentimentAnalysis.sentiment]++;
     });
 
     return Object.entries(sentimentCounts).reduce((a, b) => 
@@ -418,11 +418,11 @@ const JournalCalendar: React.FC = () => {
                       {/* Sentiment Badge */}
                       <Badge className={cn(
                         "text-xs",
-                        entry.azureAnalysis.sentiment === 'positive' && "bg-green-100 text-green-800",
-                        entry.azureAnalysis.sentiment === 'negative' && "bg-red-100 text-red-800",
-                        entry.azureAnalysis.sentiment === 'neutral' && "bg-blue-100 text-blue-800"
+                        entry.sentimentAnalysis.sentiment === 'positive' && "bg-green-100 text-green-800",
+                        entry.sentimentAnalysis.sentiment === 'negative' && "bg-red-100 text-red-800",
+                        entry.sentimentAnalysis.sentiment === 'neutral' && "bg-blue-100 text-blue-800"
                       )}>
-                        {entry.azureAnalysis.sentiment} ({Math.round(entry.azureAnalysis.confidenceScores[entry.azureAnalysis.sentiment] * 100)}%)
+                        {entry.sentimentAnalysis.sentiment} ({Math.round(entry.sentimentAnalysis.confidenceScores[entry.sentimentAnalysis.sentiment] * 100)}%)
                       </Badge>
 
                       {/* Journal Text */}
