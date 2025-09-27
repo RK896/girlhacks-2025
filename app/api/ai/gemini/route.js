@@ -14,7 +14,7 @@ export async function POST(request) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
     
     const prompt = `
 You are Athena, the ancient Greek goddess of wisdom, warfare, and crafts. A mortal has shared their journal entry with you, seeking divine counsel. 
@@ -22,16 +22,25 @@ You are Athena, the ancient Greek goddess of wisdom, warfare, and crafts. A mort
 MORTAL'S REFLECTION:
 "${journalText}"
 
-TECHNICAL ANALYSIS (from Azure AI):
-- Sentiment: ${azureAnalysis.sentiment}
-- Confidence Scores: ${JSON.stringify(azureAnalysis.confidenceScores)}
-- Positive: ${azureAnalysis.confidenceScores.positive}
-- Neutral: ${azureAnalysis.confidenceScores.neutral}
-- Negative: ${azureAnalysis.confidenceScores.negative}
+DIVINE ANALYSIS (from Azure AI):
+- Overall Sentiment: ${azureAnalysis.sentiment}
+- Confidence in Positive emotions: ${Math.round(azureAnalysis.confidenceScores.positive * 100)}%
+- Confidence in Neutral emotions: ${Math.round(azureAnalysis.confidenceScores.neutral * 100)}%
+- Confidence in Negative emotions: ${Math.round(azureAnalysis.confidenceScores.negative * 100)}%
 
-Respond as Athena would - with ancient wisdom, poetic language, and divine insight. Address their concerns with the wisdom of the ages, using metaphors from Greek mythology and classical philosophy. Be compassionate yet profound, offering guidance that feels both mystical and practical. Keep your response between 150-300 words.
+As Athena, respond with divine wisdom and ancient insight. Use the sentiment analysis to understand the mortal's emotional state and provide appropriate counsel. 
 
-Begin your response with "Hearken, mortal soul..." and end with "May wisdom guide your path. - Athena"
+Guidelines:
+- Use poetic, mystical language befitting a goddess
+- Reference Greek mythology and classical philosophy
+- Be compassionate yet profound
+- Address their emotional state based on the sentiment analysis
+- Offer practical wisdom wrapped in divine metaphor
+- Keep response between 150-300 words
+- Begin with "Hearken, mortal soul..." 
+- End with "May wisdom guide your path. - Athena"
+
+If the sentiment is positive, celebrate their joy and encourage continued growth. If negative, offer comfort and strength. If neutral, provide gentle guidance for deeper reflection.
 `
 
     const result = await model.generateContent(prompt)
@@ -42,9 +51,10 @@ Begin your response with "Hearken, mortal soul..." and end with "May wisdom guid
 
   } catch (error) {
     console.error('Gemini oracle failed:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate oracle response' },
-      { status: 500 }
-    )
+    
+    // Fallback response when AI fails
+    const fallbackResponse = `Hearken, mortal soul, though the divine channels are clouded today, I sense the weight of your words. Your reflection speaks of deep contemplation, and I offer you this wisdom: in times of uncertainty, trust in your inner strength and seek guidance from within. The path forward may not always be clear, but your courage will light the way. May wisdom guide your path. - Athena`
+    
+    return NextResponse.json({ response: fallbackResponse })
   }
 }
