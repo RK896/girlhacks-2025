@@ -91,13 +91,26 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       
       console.log('Microphone access successful:', stream)
       
-      // Force WebM with Opus codec for better Azure compatibility
-      let mimeType = 'audio/webm; codecs=opus'
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm'
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4'
+      // Force WAV format for best Azure compatibility
+      let mimeType = 'audio/wav'
+      if (!MediaRecorder.isTypeSupported('audio/wav')) {
+        // Fallback to other formats if WAV not supported
+        const fallbackTypes = [
+          'audio/webm; codecs=opus',
+          'audio/webm',
+          'audio/mp4; codecs=mp4a.40.2',
+          'audio/mp4'
+        ]
+        
+        for (const type of fallbackTypes) {
+          if (MediaRecorder.isTypeSupported(type)) {
+            mimeType = type
+            console.log('WAV not supported, using fallback:', type)
+            break
+          }
         }
+      } else {
+        console.log('Using WAV format for best Azure compatibility')
       }
       
       console.log('Using MIME type:', mimeType)
@@ -106,8 +119,12 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       console.log('MP4 supported:', MediaRecorder.isTypeSupported('audio/mp4'))
       
       const mediaRecorderOptions = {
-        mimeType: mimeType,
-        audioBitsPerSecond: 16000
+        mimeType: mimeType
+      }
+      
+      // Add bitrate for better quality
+      if (mimeType.includes('webm') || mimeType.includes('mp4')) {
+        mediaRecorderOptions.audioBitsPerSecond = 128000
       }
       
       console.log('MediaRecorder options:', mediaRecorderOptions)
@@ -123,7 +140,12 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       }
       
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' })
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
+        console.log('Audio blob created:', {
+          size: audioBlob.size,
+          type: audioBlob.type,
+          chunks: audioChunksRef.current.length
+        })
         await processAudio(audioBlob)
         
         // Stop all tracks to release microphone
@@ -184,15 +206,8 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
         type: audioBlob.type
       })
       
-      // Convert audio to WAV format if needed
-      let processedBlob = audioBlob
-      if (audioBlob.type !== 'audio/wav') {
-        console.log('Converting audio to WAV format...')
-        processedBlob = await convertToWav(audioBlob)
-      }
-      
       const formData = new FormData()
-      formData.append('audio', processedBlob, 'recording.wav')
+      formData.append('audio', audioBlob, `recording.${audioBlob.type.split('/')[1]}`)
       
       console.log('Sending audio to API...')
       const response = await fetch('/api/ai/speech', {
@@ -210,6 +225,8 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       
       const data = await response.json()
       console.log('API response data:', data)
+      console.log('Transcribed text:', data.transcribedText)
+      console.log('Sentiment:', data.sentiment)
       
       if (data.error) {
         throw new Error(data.error)

@@ -1,8 +1,8 @@
-// File: /Users/rohit/Documents/Projects/girlhacks-2025/app/api/auth/login/route.js
-import * as entry from '../../../../../../app/api/auth/login/route.js'
+// File: /Users/rohit/Documents/Projects/girlhacks-2025/app/api/ai/azure/route.js
+import * as entry from '../../../../../../app/api/ai/azure/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../../app/api/auth/login/route.js')
+type TEntry = typeof import('../../../../../../app/api/ai/azure/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{

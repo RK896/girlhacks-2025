@@ -1,8 +1,8 @@
-// File: /Users/rohit/Documents/Projects/girlhacks-2025/app/api/test-openai/route.js
-import * as entry from '../../../../../app/api/test-openai/route.js'
+// File: /Users/rohit/Documents/Projects/girlhacks-2025/app/api/auth/me/route.js
+import * as entry from '../../../../../../app/api/auth/me/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../app/api/test-openai/route.js')
+type TEntry = typeof import('../../../../../../app/api/auth/me/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
