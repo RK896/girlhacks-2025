@@ -1,0 +1,1 @@
+{"kind":"FETCH","data":{"headers":{"content-length":"0","date":"Sat, 27 Sep 2025 21:03:15 GMT","server":"Kestrel","strict-transport-security":"max-age=31536000; includeSubDomains"},"body":"","status":200,"url":"https://eastus2.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US"},"revalidate":31536000,"tags":[]}
