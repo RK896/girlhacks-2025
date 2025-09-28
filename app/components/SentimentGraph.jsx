@@ -77,7 +77,7 @@ export default function SentimentGraph({ entries }) {
   const maxSentiment = Math.max(...graphData.map(d => Math.abs(d.sentiment)), 1)
 
   return (
-    <div className="temple-container p-6 mb-8">
+    <div className="temple-container">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-cinzel font-bold text-athena-blue">
           Emotional Journey
