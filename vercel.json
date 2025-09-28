@@ -1,18 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "NEXT_PUBLIC_AZURE_AI_ENDPOINT": "@azure_ai_endpoint",
-    "NEXT_PUBLIC_AZURE_AI_KEY": "@azure_ai_key",
-    "NEXT_PUBLIC_GEMINI_API_KEY": "@gemini_api_key"
-  },
   "functions": {
     "app/api/**/*.js": {
       "maxDuration": 30
