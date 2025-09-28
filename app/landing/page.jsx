@@ -2,9 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '../contexts/AuthContext'
+import AuthModal from '../components/AuthModal'
+import { useRouter } from 'next/navigation'
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState('login')
+  const { currentUser } = useAuth()
+  const router = useRouter()
+
+  // Show different content for logged-in users instead of redirecting
 
   const features = [
     {
@@ -50,32 +59,50 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-marble-light via-white to-marble-dark">
       {/* Navigation */}
-      <nav className="relative z-50 bg-white/90 backdrop-blur-md border-b border-gold-main/20">
+      <nav className="relative z-50 bg-white/95 backdrop-blur-md border-b border-gold-main/20 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-2xl font-cinzel font-bold text-athena-blue">🏛️ Athena's Journal</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-athena-blue to-gold-main rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🏛️</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-cinzel font-bold text-athena-blue">Athena's Journal</h1>
+                <p className="text-xs text-gray-500">Divine Wisdom Awaits</p>
+              </div>
             </div>
             
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <a href="#features" className="text-gray-700 hover:text-athena-blue transition-colors">Features</a>
-                <a href="#testimonials" className="text-gray-700 hover:text-athena-blue transition-colors">Testimonials</a>
-                <a href="#about" className="text-gray-700 hover:text-athena-blue transition-colors">About</a>
+                <a href="#features" className="text-gray-700 hover:text-athena-blue transition-colors font-medium">Features</a>
+                <a href="#testimonials" className="text-gray-700 hover:text-athena-blue transition-colors font-medium">Testimonials</a>
+                <a href="#about" className="text-gray-700 hover:text-athena-blue transition-colors font-medium">About</a>
               </div>
             </div>
 
             <div className="hidden md:block">
-              <Link href="/" className="altar-button text-sm">
-                Enter the Temple
-              </Link>
+              {currentUser ? (
+                <Link href="/" className="altar-button text-sm px-6 py-2">
+                  Enter Journal
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setShowAuthModal(true)
+                  }}
+                  className="altar-button text-sm px-6 py-2"
+                >
+                  Begin Your Journey
+                </button>
+              )}
             </div>
 
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700 hover:text-athena-blue"
+                className="text-gray-700 hover:text-athena-blue p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -87,14 +114,26 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gold-main/20">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <a href="#features" className="block px-3 py-2 text-gray-700 hover:text-athena-blue">Features</a>
-              <a href="#testimonials" className="block px-3 py-2 text-gray-700 hover:text-athena-blue">Testimonials</a>
-              <a href="#about" className="block px-3 py-2 text-gray-700 hover:text-athena-blue">About</a>
-              <Link href="/" className="block px-3 py-2">
-                <span className="altar-button text-sm w-full text-center">Enter the Temple</span>
-              </Link>
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gold-main/20 shadow-lg">
+            <div className="px-4 pt-2 pb-3 space-y-1">
+              <a href="#features" className="block px-3 py-2 text-gray-700 hover:text-athena-blue hover:bg-gray-50 rounded-md transition-colors">Features</a>
+              <a href="#testimonials" className="block px-3 py-2 text-gray-700 hover:text-athena-blue hover:bg-gray-50 rounded-md transition-colors">Testimonials</a>
+              <a href="#about" className="block px-3 py-2 text-gray-700 hover:text-athena-blue hover:bg-gray-50 rounded-md transition-colors">About</a>
+              {currentUser ? (
+                <Link href="/" className="block px-3 py-2">
+                  <span className="altar-button text-sm w-full text-center">Enter Journal</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setShowAuthModal(true)
+                  }}
+                  className="block px-3 py-2 w-full text-left"
+                >
+                  <span className="altar-button text-sm w-full text-center">Begin Your Journey</span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -104,23 +143,56 @@ export default function LandingPage() {
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-cinzel font-bold text-athena-blue mb-8 leading-tight">
-            Where Ancient Wisdom
-            <br />
-            <span className="text-gold-main">Meets Modern AI</span>
+            {currentUser ? (
+              <>
+                Welcome Back, {currentUser.name}
+                <br />
+                <span className="text-gold-main">Continue Your Divine Journey</span>
+              </>
+            ) : (
+              <>
+                Where Ancient Wisdom
+                <br />
+                <span className="text-gold-main">Meets Modern AI</span>
+              </>
+            )}
           </h1>
           
           <p className="text-xl sm:text-2xl text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Experience divine journaling with Athena, the goddess of wisdom. 
-            Share your thoughts and receive counsel powered by cutting-edge AI technology.
+            {currentUser ? (
+              `Continue your journey of self-discovery with Athena's divine wisdom. Your sacred journal awaits your thoughts and reflections.`
+            ) : (
+              `Experience divine journaling with Athena, the goddess of wisdom. Share your thoughts and receive counsel powered by cutting-edge AI technology.`
+            )}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link href="/" className="altar-button text-lg px-12 py-4">
-              🔮 Begin Your Journey
-            </Link>
-            <a href="#features" className="text-athena-blue hover:text-gold-main transition-colors font-semibold">
-              Learn More ↓
-            </a>
+            {currentUser ? (
+              <Link href="/" className="altar-button text-lg px-12 py-4">
+                🏛️ Enter Your Sacred Journal
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setShowAuthModal(true)
+                  }}
+                  className="altar-button text-lg px-12 py-4"
+                >
+                  🔮 Begin Your Journey
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthMode('login')
+                    setShowAuthModal(true)
+                  }}
+                  className="text-athena-blue hover:text-gold-main transition-colors font-semibold"
+                >
+                  Already have an account? Sign in →
+                </button>
+              </>
+            )}
           </div>
 
           {/* Hero Image/Visual */}
@@ -254,9 +326,21 @@ export default function LandingPage() {
           <p className="text-xl text-gray-700 mb-12 leading-relaxed">
             Join thousands who have found wisdom, clarity, and peace through Athena's Journal.
           </p>
-          <Link href="/" className="altar-button text-xl px-16 py-6">
-            🏛️ Enter the Sacred Temple
-          </Link>
+          {currentUser ? (
+            <Link href="/" className="altar-button text-xl px-16 py-6">
+              🏛️ Enter Your Sacred Journal
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                setAuthMode('signup')
+                setShowAuthModal(true)
+              }}
+              className="altar-button text-xl px-16 py-6"
+            >
+              🏛️ Enter the Sacred Temple
+            </button>
+          )}
         </div>
       </section>
 
@@ -274,6 +358,13 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        mode={authMode}
+      />
     </div>
   )
 }
