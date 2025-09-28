@@ -9,14 +9,14 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
   const [permissionGranted, setPermissionGranted] = useState(false)
   const [debugInfo, setDebugInfo] = useState({})
   const [recordingStartTime, setRecordingStartTime] = useState(null)
-  const mediaRecorderRef = useRef(null)
-  const audioChunksRef = useRef([])
+  const [interimResults, setInterimResults] = useState('')
+  const recognitionRef = useRef(null)
 
   useEffect(() => {
-    // Check if browser supports media recording
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // Check if browser supports Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       setIsSupported(true)
-      checkMicrophonePermission()
+      initializeSpeechRecognition()
       
       // Gather debug information
       const debug = {
@@ -24,25 +24,100 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
         isSecureContext: window.isSecureContext,
         protocol: window.location.protocol,
         hostname: window.location.hostname,
-        mediaDevicesSupported: !!navigator.mediaDevices,
-        getUserMediaSupported: !!navigator.mediaDevices?.getUserMedia,
-        mediaRecorderSupported: !!window.MediaRecorder,
-        supportedMimeTypes: []
-      }
-      
-      // Check supported MIME types
-      if (window.MediaRecorder) {
-        const types = ['audio/wav', 'audio/webm', 'audio/mp4', 'audio/ogg']
-        debug.supportedMimeTypes = types.filter(type => MediaRecorder.isTypeSupported(type))
+        speechRecognitionSupported: true,
+        speechRecognitionType: 'webkitSpeechRecognition' in window ? 'webkit' : 'standard'
       }
       
       setDebugInfo(debug)
     }
   }, [])
 
+  const initializeSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    recognitionRef.current = new SpeechRecognition()
+    
+    // Configure recognition settings
+    recognitionRef.current.continuous = true
+    recognitionRef.current.interimResults = true
+    recognitionRef.current.lang = 'en-US'
+    recognitionRef.current.maxAlternatives = 1
+
+    // Handle recognition results
+    recognitionRef.current.onresult = (event) => {
+      let finalTranscript = ''
+      let interimTranscript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript
+        } else {
+          interimTranscript += transcript
+        }
+      }
+
+      // Update interim results for real-time display
+      setInterimResults(interimTranscript)
+
+      // If we have final results, process them
+      if (finalTranscript) {
+        console.log('Final transcript:', finalTranscript)
+        handleTranscription(finalTranscript)
+      }
+    }
+
+    // Handle recognition end
+    recognitionRef.current.onend = () => {
+      console.log('Speech recognition ended')
+      setIsRecording(false)
+      setRecordingStartTime(null)
+      setInterimResults('')
+    }
+
+    // Handle recognition errors
+    recognitionRef.current.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      setIsRecording(false)
+      setRecordingStartTime(null)
+      setInterimResults('')
+      
+      let errorMessage = 'Speech recognition failed. '
+      
+      switch (event.error) {
+        case 'no-speech':
+          errorMessage += 'No speech was detected. Please try speaking more clearly.'
+          break
+        case 'audio-capture':
+          errorMessage += 'Microphone not found or not accessible.'
+          break
+        case 'not-allowed':
+          errorMessage += 'Microphone permission denied. Please allow microphone access.'
+          break
+        case 'network':
+          errorMessage += 'Network error occurred during speech recognition.'
+          break
+        case 'aborted':
+          errorMessage += 'Speech recognition was aborted.'
+          break
+        default:
+          errorMessage += `Unknown error: ${event.error}`
+      }
+      
+      setError(errorMessage)
+    }
+
+    // Handle recognition start
+    recognitionRef.current.onstart = () => {
+      console.log('Speech recognition started')
+      setIsRecording(true)
+      setRecordingStartTime(Date.now())
+      setError(null)
+    }
+  }
+
   const checkMicrophonePermission = async () => {
     try {
-      // Try to actually access the microphone to check if it works
+      // Try to access microphone to check permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       setPermissionGranted(true)
       // Stop the stream immediately as we just wanted to check permission
@@ -66,205 +141,86 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
     }
   }
 
-  const startRecording = async () => {
+  const startRecording = () => {
+    if (!recognitionRef.current) {
+      setError('Speech recognition not initialized. Please refresh the page.')
+      return
+    }
+
     try {
       setError(null)
-      
-      // Check if getUserMedia is available
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('getUserMedia is not supported in this browser')
-      }
-      
-      console.log('Attempting to access microphone...')
-      
-      // Request microphone permission with optimized settings for speech recognition
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 16000, // 16kHz is optimal for speech recognition
-          channelCount: 1,   // Mono audio
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          latency: 0.01      // Low latency
-        } 
-      })
-      
-      console.log('Microphone access successful:', stream)
-      
-      // Force WAV format for best Azure compatibility
-      let mimeType = 'audio/wav'
-      if (!MediaRecorder.isTypeSupported('audio/wav')) {
-        // Fallback to other formats if WAV not supported
-        const fallbackTypes = [
-          'audio/webm; codecs=opus',
-          'audio/webm',
-          'audio/mp4; codecs=mp4a.40.2',
-          'audio/mp4'
-        ]
-        
-        for (const type of fallbackTypes) {
-          if (MediaRecorder.isTypeSupported(type)) {
-            mimeType = type
-            console.log('WAV not supported, using fallback:', type)
-            break
-          }
-        }
-      } else {
-        console.log('Using WAV format for best Azure compatibility')
-      }
-      
-      console.log('Using MIME type:', mimeType)
-      console.log('WebM with Opus supported:', MediaRecorder.isTypeSupported('audio/webm; codecs=opus'))
-      console.log('WebM supported:', MediaRecorder.isTypeSupported('audio/webm'))
-      console.log('MP4 supported:', MediaRecorder.isTypeSupported('audio/mp4'))
-      
-      const mediaRecorderOptions = {
-        mimeType: mimeType
-      }
-      
-      // Add bitrate for better quality
-      if (mimeType.includes('webm') || mimeType.includes('mp4')) {
-        mediaRecorderOptions.audioBitsPerSecond = 128000
-      }
-      
-      console.log('MediaRecorder options:', mediaRecorderOptions)
-      
-      mediaRecorderRef.current = new MediaRecorder(stream, mediaRecorderOptions)
-      
-      audioChunksRef.current = []
-      
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data)
-        }
-      }
-      
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
-        console.log('Audio blob created:', {
-          size: audioBlob.size,
-          type: audioBlob.type,
-          chunks: audioChunksRef.current.length
-        })
-        await processAudio(audioBlob)
-        
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach(track => track.stop())
-      }
-      
-      mediaRecorderRef.current.start()
-      setIsRecording(true)
-      setRecordingStartTime(Date.now())
-      
+      recognitionRef.current.start()
     } catch (err) {
-      console.error('Error starting recording:', err)
-      
-      let errorMessage = 'Failed to access microphone. '
-      
-      if (err.name === 'NotAllowedError') {
-        errorMessage += 'Please allow microphone access and try again.'
-      } else if (err.name === 'NotFoundError') {
-        errorMessage += 'No microphone found. Please connect a microphone.'
-      } else if (err.name === 'NotSupportedError') {
-        errorMessage += 'Microphone access is not supported in this browser.'
-      } else if (err.name === 'NotReadableError') {
-        errorMessage += 'Microphone is being used by another application.'
-      } else if (err.message.includes('getUserMedia is not supported')) {
-        errorMessage += 'Voice recording is not supported in this browser.'
-      } else {
-        errorMessage += 'Please check your browser permissions and try again.'
-      }
-      
-      setError(errorMessage)
+      console.error('Error starting speech recognition:', err)
+      setError('Failed to start speech recognition. Please try again.')
     }
   }
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      const recordingDuration = Date.now() - recordingStartTime
-      console.log('Recording duration:', recordingDuration, 'ms')
-      
-      if (recordingDuration < 2000) {
-        setError('Please record for at least 2 seconds for better speech recognition.')
-        setIsRecording(false)
-        setRecordingStartTime(null)
-        return
-      }
-      
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
-      setRecordingStartTime(null)
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop()
     }
   }
 
-  const processAudio = async (audioBlob) => {
+  const handleTranscription = async (transcribedText) => {
     setIsProcessing(true)
     
     try {
-      console.log('Processing audio blob:', {
-        size: audioBlob.size,
-        type: audioBlob.type
-      })
+      console.log('Processing transcribed text:', transcribedText)
       
-      const formData = new FormData()
-      formData.append('audio', audioBlob, `recording.${audioBlob.type.split('/')[1]}`)
-      
-      console.log('Sending audio to API...')
-      const response = await fetch('/api/ai/speech', {
-        method: 'POST',
-        body: formData
-      })
-      
-      console.log('API response status:', response.status)
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('API error response:', errorText)
-        throw new Error(`API error: ${response.status} - ${errorText}`)
+      // Call the parent component callback for transcription
+      if (onTranscription && transcribedText) {
+        onTranscription(transcribedText)
       }
       
-      const data = await response.json()
-      console.log('API response data:', data)
-      console.log('Transcribed text:', data.transcribedText)
-      console.log('Sentiment:', data.sentiment)
+      // For sentiment analysis, we'll use a simple approach
+      // In a real app, you might want to call an API here
+      const sentiment = analyzeSentiment(transcribedText)
       
-      if (data.error) {
-        throw new Error(data.error)
-      }
-      
-      // Call the parent component callbacks
-      if (onTranscription && data.transcribedText) {
-        onTranscription(data.transcribedText)
-      }
-      
-      if (onSentiment && data.sentiment) {
-        onSentiment(data.sentiment)
+      if (onSentiment && sentiment) {
+        onSentiment(sentiment)
       }
       
     } catch (err) {
-      console.error('Error processing audio:', err)
-      setError(`Failed to process audio: ${err.message}. Please try again.`)
+      console.error('Error processing transcription:', err)
+      setError(`Failed to process transcription: ${err.message}`)
     } finally {
       setIsProcessing(false)
     }
   }
 
-  const convertToWav = async (audioBlob) => {
-    try {
-      // For now, just return the original blob
-      // In a production app, you'd want to use a library like lamejs or similar
-      // to convert to proper WAV format
-      return audioBlob
-    } catch (err) {
-      console.error('Error converting audio:', err)
-      return audioBlob
+  const analyzeSentiment = (text) => {
+    // Simple sentiment analysis based on keywords
+    // In a real app, you'd call your Azure AI sentiment API here
+    const positiveWords = ['happy', 'good', 'great', 'excellent', 'wonderful', 'amazing', 'love', 'like', 'enjoy']
+    const negativeWords = ['sad', 'bad', 'terrible', 'awful', 'hate', 'dislike', 'angry', 'frustrated', 'worried']
+    
+    const lowerText = text.toLowerCase()
+    const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length
+    const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length
+    
+    let sentiment = 'neutral'
+    if (positiveCount > negativeCount) {
+      sentiment = 'positive'
+    } else if (negativeCount > positiveCount) {
+      sentiment = 'negative'
+    }
+    
+    return {
+      sentiment,
+      confidenceScores: {
+        positive: sentiment === 'positive' ? 0.8 : sentiment === 'neutral' ? 0.3 : 0.1,
+        neutral: sentiment === 'neutral' ? 0.8 : 0.3,
+        negative: sentiment === 'negative' ? 0.8 : sentiment === 'neutral' ? 0.3 : 0.1
+      }
     }
   }
 
   if (!isSupported) {
     return (
       <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-yellow-800">Voice recording is not supported in this browser.</p>
+        <p className="text-yellow-800">Speech recognition is not supported in this browser.</p>
+        <p className="text-yellow-700 text-sm mt-2">Please use Chrome, Edge, or Safari for voice recording.</p>
       </div>
     )
   }
@@ -317,7 +273,7 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
         <div className="text-center">
           <div className="status-indicator status-recording">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <span>Recording... Speak clearly for at least 2 seconds</span>
+            <span>Listening... Speak clearly</span>
             <div className="text-lg">🎙️</div>
           </div>
           {recordingStartTime && (
@@ -328,12 +284,20 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
         </div>
       )}
 
+      {/* Interim Results */}
+      {interimResults && (
+        <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <p className="text-blue-800 text-sm italic">"{interimResults}"</p>
+          <p className="text-blue-600 text-xs mt-1">Listening...</p>
+        </div>
+      )}
+
       {/* Processing Status */}
       {isProcessing && (
         <div className="text-center">
           <div className="status-indicator status-processing">
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <span>Processing audio...</span>
+            <span>Processing speech...</span>
             <div className="text-lg">⏳</div>
           </div>
         </div>
@@ -373,7 +337,7 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
               <p className="text-gray-700 font-medium">Voice Recording Ready</p>
             </div>
             <p className="text-gray-600">Click to start recording your voice, then speak your journal entry.</p>
-            <p className="text-gray-500 mt-1">The audio will be transcribed and analyzed for sentiment.</p>
+            <p className="text-gray-500 mt-1">Your speech will be transcribed in real-time using your browser's built-in speech recognition.</p>
           </div>
         )}
       </div>
@@ -385,8 +349,8 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
           <div className="mt-2 space-y-1 text-gray-600">
             <div><strong>Protocol:</strong> {debugInfo.protocol}</div>
             <div><strong>Secure Context:</strong> {debugInfo.isSecureContext ? 'Yes' : 'No'}</div>
-            <div><strong>MediaRecorder:</strong> {debugInfo.mediaRecorderSupported ? 'Supported' : 'Not Supported'}</div>
-            <div><strong>Supported MIME Types:</strong> {debugInfo.supportedMimeTypes?.join(', ') || 'None'}</div>
+            <div><strong>Speech Recognition:</strong> {debugInfo.speechRecognitionSupported ? 'Supported' : 'Not Supported'}</div>
+            <div><strong>Recognition Type:</strong> {debugInfo.speechRecognitionType}</div>
             <div><strong>Permission Status:</strong> {permissionGranted ? 'Granted' : 'Denied/Unknown'}</div>
           </div>
         </details>
