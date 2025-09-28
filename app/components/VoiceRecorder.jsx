@@ -6,8 +6,7 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
   const [isSupported, setIsSupported] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
-  const [permissionGranted, setPermissionGranted] = useState(false)
-  const [debugInfo, setDebugInfo] = useState({})
+  const [permissionGranted, setPermissionGranted] = useState(true)
   const [recordingStartTime, setRecordingStartTime] = useState(null)
   const [interimResults, setInterimResults] = useState('')
   const recognitionRef = useRef(null)
@@ -17,18 +16,6 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       setIsSupported(true)
       initializeSpeechRecognition()
-      
-      // Gather debug information
-      const debug = {
-        userAgent: navigator.userAgent,
-        isSecureContext: window.isSecureContext,
-        protocol: window.location.protocol,
-        hostname: window.location.hostname,
-        speechRecognitionSupported: true,
-        speechRecognitionType: 'webkitSpeechRecognition' in window ? 'webkit' : 'standard'
-      }
-      
-      setDebugInfo(debug)
     }
   }, [])
 
@@ -115,33 +102,9 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
     }
   }
 
-  const checkMicrophonePermission = async () => {
-    try {
-      // Try to access microphone to check permission
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      setPermissionGranted(true)
-      // Stop the stream immediately as we just wanted to check permission
-      stream.getTracks().forEach(track => track.stop())
-    } catch (err) {
-      console.log('Microphone permission check failed:', err)
-      setPermissionGranted(false)
-    }
-  }
 
-  const requestMicrophonePermission = async () => {
-    try {
-      setError(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      setPermissionGranted(true)
-      // Stop the stream immediately as we just wanted to check permission
-      stream.getTracks().forEach(track => track.stop())
-    } catch (err) {
-      console.error('Permission request failed:', err)
-      setError('Please allow microphone access in your browser settings and refresh the page.')
-    }
-  }
 
-  const startRecording = () => {
+  const startRecording = async () => {
     if (!recognitionRef.current) {
       setError('Speech recognition not initialized. Please refresh the page.')
       return
@@ -149,6 +112,22 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
 
     try {
       setError(null)
+      
+      // Request microphone permission if not already granted
+      if (!permissionGranted) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          setPermissionGranted(true)
+          // Stop the stream immediately as we just wanted to check permission
+          stream.getTracks().forEach(track => track.stop())
+        } catch (err) {
+          console.error('Permission request failed:', err)
+          setError('Please allow microphone access in your browser settings and try again.')
+          return
+        }
+      }
+      
+      // Always start recording - this will add to existing text
       recognitionRef.current.start()
     } catch (err) {
       console.error('Error starting speech recognition:', err)
@@ -173,8 +152,8 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
         onTranscription(transcribedText)
       }
       
-      // For sentiment analysis, we'll use a simple approach
-      // In a real app, you might want to call an API here
+      // For sentiment analysis, we'll use a simple keyword-based approach
+      // This provides basic sentiment analysis for voice recordings
       const sentiment = analyzeSentiment(transcribedText)
       
       if (onSentiment && sentiment) {
@@ -191,7 +170,7 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
 
   const analyzeSentiment = (text) => {
     // Simple sentiment analysis based on keywords
-    // In a real app, you'd call your Azure AI sentiment API here
+    // This provides basic sentiment analysis for voice recordings
     const positiveWords = ['happy', 'good', 'great', 'excellent', 'wonderful', 'amazing', 'love', 'like', 'enjoy']
     const negativeWords = ['sad', 'bad', 'terrible', 'awful', 'hate', 'dislike', 'angry', 'frustrated', 'worried']
     
@@ -229,19 +208,9 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
     <div className="space-y-6">
       {/* Recording Controls */}
       <div className="flex justify-center">
-        {!permissionGranted ? (
+        {!isRecording ? (
           <button
-            onClick={requestMicrophonePermission}
-            className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-medium"
-          >
-            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            </div>
-            <span>Enable Microphone</span>
-            <div className="text-xl">🎤</div>
-          </button>
-        ) : !isRecording ? (
-          <button
+            type="button"
             onClick={startRecording}
             disabled={isProcessing}
             className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium"
@@ -256,6 +225,7 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
           </button>
         ) : (
           <button
+            type="button"
             onClick={stopRecording}
             className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-medium"
           >
@@ -322,39 +292,15 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
 
       {/* Instructions */}
       <div className="text-center text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
-        {!permissionGranted ? (
-          <div>
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <div className="text-lg">🎤</div>
-              <p className="text-blue-600 font-medium">Microphone access required for voice recording</p>
-            </div>
-            <p className="text-gray-600">Click "Enable Microphone" to allow voice recording, then speak your journal entry.</p>
+        <div>
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <div className="text-lg">💬</div>
+            <p className="text-gray-700 font-medium">Voice Recording Ready</p>
           </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <div className="text-lg">💬</div>
-              <p className="text-gray-700 font-medium">Voice Recording Ready</p>
-            </div>
-            <p className="text-gray-600">Click to start recording your voice, then speak your journal entry.</p>
-            <p className="text-gray-500 mt-1">Your speech will be transcribed in real-time using your browser's built-in speech recognition.</p>
-          </div>
-        )}
+          <p className="text-gray-600">Click "Start Recording" to begin voice recording, then speak your journal entry. You can record multiple times to add more text.</p>
+        </div>
       </div>
 
-      {/* Debug Information */}
-      {process.env.NODE_ENV === 'development' && (
-        <details className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">
-          <summary className="cursor-pointer font-medium text-gray-700">Debug Information</summary>
-          <div className="mt-2 space-y-1 text-gray-600">
-            <div><strong>Protocol:</strong> {debugInfo.protocol}</div>
-            <div><strong>Secure Context:</strong> {debugInfo.isSecureContext ? 'Yes' : 'No'}</div>
-            <div><strong>Speech Recognition:</strong> {debugInfo.speechRecognitionSupported ? 'Supported' : 'Not Supported'}</div>
-            <div><strong>Recognition Type:</strong> {debugInfo.speechRecognitionType}</div>
-            <div><strong>Permission Status:</strong> {permissionGranted ? 'Granted' : 'Denied/Unknown'}</div>
-          </div>
-        </details>
-      )}
     </div>
   )
 }

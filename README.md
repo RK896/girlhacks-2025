@@ -1,20 +1,22 @@
 # Athena's Journal 🏛️
 
-A divine journaling experience where ancient Greek wisdom meets modern AI. Share your thoughts and receive counsel from Athena, the goddess of wisdom, powered by Azure AI sentiment analysis and Google's Gemini AI.                           
+A divine journaling experience where ancient Greek wisdom meets modern AI. Share your thoughts and receive counsel from Athena, the goddess of wisdom, powered by Azure AI sentiment analysis, Google's Gemini AI, and browser-based speech-to-text.                           
 
 ## Features
 
 - **Sacred Interface**: Beautiful Greek temple-inspired UI with marble and gold aesthetics                                                                      
 - **Azure AI Analysis**: Real-time sentiment analysis of your journal entries
+- **Voice Recording**: Browser-based speech-to-text for hands-free journaling
 - **Athena's Oracle**: AI-powered responses in the voice of the ancient Greek goddess                                                                           
-- **Real-time Storage**: Firebase Firestore integration for persistent journal history                                                                          
+- **Real-time Storage**: MongoDB integration for persistent journal history                                                                          
+- **Email Preferences Demo**: Frontend demonstration of email reminder settings
 - **Mobile Responsive**: Optimized for all devices
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14 with App Router, React, Tailwind CSS
 - **Backend**: Firebase Firestore
-- **AI Services**: Azure Cognitive Services, Google Gemini AI
+- **AI Services**: Azure Cognitive Services, Google Gemini AI, Web Speech API
 - **Styling**: Custom Greek temple theme with Cinzel font
 
 ## Setup Instructions
@@ -109,6 +111,13 @@ The app uses a custom Greek temple theme with these colors:
 - `athena-blue`: #104975
 
 Font: Cinzel (Google Fonts) for headings
+
+## Demo Features
+
+- **Email Preferences Demo**: Visit `/preferences` to see the email reminder settings interface (frontend demo only)
+- **Voice Recording**: Test browser-based speech-to-text functionality  
+- **Journal Entries**: Create and view journal entries with AI analysis
+- **Scrollable Timeline**: "Your Emotional Journey" section with custom scrollable interface
 
 ## Contributing
 

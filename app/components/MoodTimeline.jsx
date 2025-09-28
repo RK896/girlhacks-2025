@@ -45,7 +45,7 @@ const MoodTimeline = ({ entries }) => {
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="temple-container p-8 sm:p-10">
+      <div className="temple-container">
         <h3 className="text-xl sm:text-2xl font-cinzel font-semibold text-athena-blue mb-6 flex items-center">
           <span className="mr-3">📈</span>
           Mood Timeline
@@ -60,10 +60,15 @@ const MoodTimeline = ({ entries }) => {
   }
 
   return (
-    <div className="temple-container p-8 sm:p-10">
+    <div className="temple-container">
       <h3 className="text-xl sm:text-2xl font-cinzel font-semibold text-athena-blue mb-6 flex items-center">
         <span className="mr-3">📈</span>
         Your Emotional Journey
+        {timelineData.length > 4 && (
+          <span className="ml-3 text-sm text-gray-500 font-normal">
+            ({timelineData.length} entries - scroll to see more)
+          </span>
+        )}
       </h3>
       
       {/* Timeline */}
@@ -71,7 +76,15 @@ const MoodTimeline = ({ entries }) => {
         {/* Timeline line */}
         <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gold-main/30 via-athena-blue/30 to-gold-main/30"></div>
         
-        <div className="space-y-6">
+        {/* Scrollable timeline container */}
+        <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gold-main/30 scrollbar-track-gray-100 hover:scrollbar-thumb-gold-main/50 pr-2 relative">
+          {/* Scroll indicator */}
+          {timelineData.length > 4 && (
+            <div className="absolute top-0 right-0 z-20 bg-gradient-to-b from-white/90 to-transparent w-8 h-6 pointer-events-none">
+              <div className="text-xs text-gold-main/60 text-center mt-1">↓</div>
+            </div>
+          )}
+          <div className="space-y-6">
           {timelineData.map((entry, index) => (
             <div key={entry.id} className="relative flex items-start space-x-4 fade-in" style={{animationDelay: `${index * 0.1}s`}}>
               {/* Timeline dot */}
@@ -129,6 +142,7 @@ const MoodTimeline = ({ entries }) => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
       
