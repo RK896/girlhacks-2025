@@ -11,6 +11,7 @@ import MoodTimeline from './components/MoodTimeline'
 import WordCloud from './components/WordCloud'
 import WritingPatterns from './components/WritingPatterns'
 import VoiceRecorder from './components/VoiceRecorder'
+import AssemblyAudioTap from './components/AssemblyAudioTap'
 
 // Azure AI Analysis Function
 const runAzureAnalysis = async (journalText) => {
@@ -36,14 +37,14 @@ const runAzureAnalysis = async (journalText) => {
 }
 
 // Gemini Oracle Function
-const runGeminiOracle = async (journalText, azureAnalysis) => {
+const runGeminiOracle = async (journalText, azureAnalysis, verbalAnalysis = null) => {
   try {
     const response = await fetch('/api/ai/gemini', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ journalText, azureAnalysis }),
+      body: JSON.stringify({ journalText, azureAnalysis, verbalAnalysis }),
     })
 
     if (!response.ok) {
@@ -84,7 +85,8 @@ const runDemoMode = async (journalText) => {
 // Journal Form Component
 const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLoading }) => {
   const [journalText, setJournalText] = useState('')
-  const [isRecording, setIsRecording] = useState(false)
+    const [isRecording, setIsRecording] = useState(false)
+    const [assemblyAnalysis, setAssemblyAnalysis] = useState(null)
 
   const handleVoiceTranscription = (transcribedText) => {
     setJournalText(prev => prev + (prev ? ' ' : '') + transcribedText)
@@ -93,6 +95,35 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
   const handleVoiceSentiment = (sentiment) => {
     // Store the sentiment for later use in submission
     console.log('Voice sentiment received:', sentiment)
+    // If the browser-based voice sentiment provides the same shape as Azure, store it
+    if (sentiment && typeof sentiment === 'object' && sentiment.sentiment) {
+      setAssemblyAnalysis(sentiment)
+    }
+  }
+
+  // Handler for AssemblyAudioTap (raw audio -> AssemblyAI)
+  const handleAssemblyTranscription = (data) => {
+    // data may contain { transcribedText, azureAnalysis }
+    try {
+      if (!data) return
+      // If route returns object with transcribedText
+      const transcribedText = data.transcribedText || data.transcription || ''
+      const azureAnalysis = data.azureAnalysis || data.sentiment || null
+
+      if (transcribedText) {
+        // append transcription to journal textarea
+        setJournalText(prev => prev + (prev ? ' ' : '') + transcribedText)
+      }
+
+      if (azureAnalysis) {
+        // simply print sentiment to console as requested
+        console.log('AssemblyAI sentiment (azure format):', azureAnalysis)
+        // Persist assembly analysis into state so submission can use it
+        setAssemblyAnalysis(azureAnalysis)
+      }
+    } catch (err) {
+      console.error('Error handling assembly transcription:', err)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -108,16 +139,21 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
       let azureAnalysis, athenaResponse
 
       try {
-        // Step 1: Try Azure AI Analysis
+        // Step 1: Always run Azure analysis for canonical sentiment.
+        // Do NOT overwrite Azure sentiment with AssemblyAI results —
+        // assemblyAnalysis is only used as `verbalAnalysis` sent to Gemini.
         console.log('Starting Azure analysis...')
         azureAnalysis = await runAzureAnalysis(journalText)
         console.log('Azure analysis complete')
-        
-        // Step 2: Try Gemini Oracle Response
-        setLoadingStep('gemini')
-        console.log('Starting Gemini oracle...')
-        athenaResponse = await runGeminiOracle(journalText, azureAnalysis)
-        console.log('Gemini oracle complete')
+        if (assemblyAnalysis) {
+          console.log('Assembly analysis is available and will be included as verbalAnalysis for Gemini (no Azure overwrite):', assemblyAnalysis)
+        }
+
+  // Step 2: Try Gemini Oracle Response
+  setLoadingStep('gemini')
+  console.log('Starting Gemini oracle...')
+  athenaResponse = await runGeminiOracle(journalText, azureAnalysis, assemblyAnalysis)
+  console.log('Gemini oracle complete')
       } catch (aiError) {
         console.log('AI services failed, using demo mode:', aiError)
         // Fallback to demo mode
@@ -222,6 +258,24 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
               onSentiment={handleVoiceSentiment}
               isRecording={isRecording}
               setIsRecording={setIsRecording}
+            />
+
+            {/* AssemblyAudioTap: captures raw audio while recording and forwards transcription + sentiment */}
+            <AssemblyAudioTap
+              isRecording={isRecording}
+              onTranscription={(dataOrText) => {
+                // AssemblyAudioTap returns { transcribedText, azureAnalysis } or plain text
+                handleAssemblyTranscription(typeof dataOrText === 'string' ? { transcribedText: dataOrText } : dataOrText)
+              }}
+              onSentiment={(sentiment) => {
+                console.log('AssemblyAudioTap sentiment callback:', sentiment)
+                // Also surface to the existing handler
+                handleVoiceSentiment(sentiment)
+                // If AssemblyAudioTap provides a sentiment object, store it
+                if (sentiment && typeof sentiment === 'object' && sentiment.sentiment) {
+                  setAssemblyAnalysis(sentiment)
+                }
+              }}
             />
           </div>
           

@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY)
 
 export async function POST(request) {
   try {
-    const { journalText, azureAnalysis } = await request.json()
+    const { journalText, azureAnalysis, verbalAnalysis } = await request.json()
 
     if (!journalText || !azureAnalysis) {
       return NextResponse.json(
@@ -14,6 +14,15 @@ export async function POST(request) {
       )
     }
 
+    const verbalBlock = verbalAnalysis ? `
+    VERBAL EMOTIONAL ANALYSIS (from voice):
+    - Overall Sentiment: ${verbalAnalysis.sentiment}
+    - Positive: ${Math.round((verbalAnalysis.confidenceScores?.positive || 0) * 100)}%
+    - Neutral: ${Math.round((verbalAnalysis.confidenceScores?.neutral || 0) * 100)}%
+    - Negative: ${Math.round((verbalAnalysis.confidenceScores?.negative || 0) * 100)}%
+    Mention how the user sounds and include that in your response.
+    ` : ''
+    console.log('Verbal Block:', verbalBlock)
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
     
     const prompt = `
@@ -27,6 +36,8 @@ EMOTIONAL ANALYSIS (from Azure AI):
 - Positive emotions: ${Math.round(azureAnalysis.confidenceScores.positive * 100)}%
 - Neutral emotions: ${Math.round(azureAnalysis.confidenceScores.neutral * 100)}%
 - Negative emotions: ${Math.round(azureAnalysis.confidenceScores.negative * 100)}%
+
+${verbalBlock}
 
 As Athena, provide specific, relevant advice based on their exact words and situation. Vary your response style and personality based on their emotional state and content.
 
@@ -45,7 +56,7 @@ Guidelines:
 - Use different metaphors and analogies (olive trees, weaving, battles, temples, etc.)
 - Match your tone to their emotional state
 - Provide actionable advice tailored to their situation
-- Keep response between 80-150 words
+- Keep response between 40-60 words
 - End with "May wisdom guide your path. - Athena" or similar
 
 Focus on their specific situation and choose the most appropriate Athena personality for their needs.
