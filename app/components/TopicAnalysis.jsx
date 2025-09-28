@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useSwipeable } from 'react-swipeable'
 
 // Topic extraction function
 const extractTopics = (journalText) => {
@@ -62,6 +63,8 @@ const extractTopics = (journalText) => {
 }
 
 const TopicAnalysis = ({ entries }) => {
+  const [currentView, setCurrentView] = useState(0)
+  
   const topicData = useMemo(() => {
     if (!entries || entries.length === 0) return []
     
@@ -74,6 +77,22 @@ const TopicAnalysis = ({ entries }) => {
     // Return top 8 topics
     return topics.slice(0, 8)
   }, [entries])
+
+  // Swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (currentView < Math.ceil(topicData.length / 6) - 1) {
+        setCurrentView(currentView + 1)
+      }
+    },
+    onSwipedRight: () => {
+      if (currentView > 0) {
+        setCurrentView(currentView - 1)
+      }
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true
+  })
 
   if (!entries || entries.length === 0) {
     return (
@@ -110,28 +129,32 @@ const TopicAnalysis = ({ entries }) => {
   const maxCount = Math.max(...topicData.map(t => t.count))
 
   return (
-    <div className="temple-container p-8 sm:p-10">
+    <div className="temple-container">
       <h3 className="text-xl sm:text-2xl font-cinzel font-semibold text-athena-blue mb-6 flex items-center">
         <span className="mr-3">🫧</span>
         Your Floating Topics
       </h3>
       
       {/* Bubble Chart Container */}
-      <div className="relative w-full h-80 sm:h-96 mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-blue-50/30 to-purple-50/30 border border-gold-main/20" style={{minHeight: '400px'}}>
+      <div 
+        {...swipeHandlers}
+        className="relative w-full h-96 sm:h-[28rem] mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-blue-50/30 to-purple-50/30 border border-gold-main/20 cursor-grab active:cursor-grabbing" 
+        style={{minHeight: '500px'}}
+      >
         {topicData.map((topic, index) => {
           // Calculate bubble size based on count (minimum 60px, maximum 100px)
           const minSize = 60
           const maxSize = 100
           const size = minSize + ((topic.count / maxCount) * (maxSize - minSize))
           
-          // Calculate position in central area with some randomness
+          // Calculate position in central area with tighter clustering
           const totalBubbles = topicData.length
           const angle = (index / totalBubbles) * 2 * Math.PI - Math.PI / 2 // Start from top
-          const radius = 25 + (index % 3) * 8 // Vary radius for natural distribution
+          const radius = 15 + (index % 2) * 5 // Smaller radius for tighter clustering
           const centerX = 50 // Center X as percentage
           const centerY = 50 // Center Y as percentage
-          const x = centerX + (radius * Math.cos(angle)) + (Math.random() - 0.5) * 10 // Add some randomness
-          const y = centerY + (radius * Math.sin(angle)) + (Math.random() - 0.5) * 10 // Add some randomness
+          const x = centerX + (radius * Math.cos(angle)) + (Math.random() - 0.5) * 5 // Reduced randomness
+          const y = centerY + (radius * Math.sin(angle)) + (Math.random() - 0.5) * 5 // Reduced randomness
           
           // Bubble colors with gradients
           const bubbleColors = [
@@ -191,38 +214,38 @@ const TopicAnalysis = ({ entries }) => {
           )
         })}
         
-        
         {/* Background decorative elements */}
         <div className="absolute top-4 left-4 w-6 h-6 bg-gold-main/15 rounded-full animate-float"></div>
         <div className="absolute top-8 right-6 w-4 h-4 bg-athena-blue/15 rounded-full animate-float" style={{animationDelay: '1s'}}></div>
         <div className="absolute bottom-6 left-8 w-3 h-3 bg-green-400/15 rounded-full animate-float" style={{animationDelay: '2s'}}></div>
         <div className="absolute bottom-4 right-4 w-4 h-4 bg-purple-400/15 rounded-full animate-float" style={{animationDelay: '1.5s'}}></div>
+        
+        {/* Swipe indicator */}
+        {topicData.length > 6 && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+            {Array.from({ length: Math.ceil(topicData.length / 6) }).map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentView ? 'bg-gold-main' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
       
-      {/* Topic Legend */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-        {topicData.slice(0, 6).map((topic, index) => {
-          const bubbleColors = [
-            'bg-gradient-to-r from-gold-main to-yellow-400',
-            'bg-gradient-to-r from-athena-blue to-blue-400',
-            'bg-gradient-to-r from-green-500 to-emerald-400',
-            'bg-gradient-to-r from-purple-500 to-pink-400',
-            'bg-gradient-to-r from-red-500 to-orange-400',
-            'bg-gradient-to-r from-indigo-500 to-blue-400'
-          ]
-          
-          return (
-            <div key={topic.topic} className="flex items-center space-x-2 p-2 rounded-lg bg-white/60 backdrop-blur-sm">
-              <div className={`w-4 h-4 rounded-full ${bubbleColors[index % bubbleColors.length]}`}></div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-700 truncate">{topic.topic}</div>
-                <div className="text-xs text-gray-500">{topic.count} mentions</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* Swipe Instructions */}
+      {topicData.length > 6 && (
+        <div className="text-center mb-4">
+          <p className="text-sm text-gray-500 flex items-center justify-center space-x-2">
+            <span>👆</span>
+            <span>Swipe left/right to explore more topics</span>
+          </p>
+        </div>
+      )}
       
+      {/* Insights Section */}
       <div className="p-4 bg-gradient-to-r from-athena-blue/5 to-blue-50/50 rounded-lg border border-athena-blue/20">
         <p className="text-sm text-gray-600 text-center">
           <span className="font-semibold text-athena-blue">Insight:</span> Your journal topics float freely in your mind, each bubble representing a theme from your thoughts. 
