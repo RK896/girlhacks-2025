@@ -125,7 +125,7 @@ const WritingPatterns = ({ entries }) => {
   const sentimentInfo = getSentimentLabel(patternData.avgSentiment)
 
   return (
-    <div className="temple-container p-8 sm:p-10">
+    <div className="temple-container">
       <h3 className="text-xl sm:text-2xl font-cinzel font-semibold text-athena-blue mb-6 flex items-center">
         <span className="mr-3">📊</span>
         Your Writing Patterns
