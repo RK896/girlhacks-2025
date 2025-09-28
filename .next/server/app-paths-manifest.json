@@ -1,8 +1,8 @@
 {
   "/page": "app/page.js",
   "/api/journal/entries/route": "app/api/journal/entries/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/ai/azure/route": "app/api/ai/azure/route.js",
   "/landing/page": "app/landing/page.js",
-  "/api/ai/speech/route": "app/api/ai/speech/route.js",
-  "/api/ai/gemini/route": "app/api/ai/gemini/route.js",
-  "/api/ai/azure/route": "app/api/ai/azure/route.js"
+  "/api/ai/gemini/route": "app/api/ai/gemini/route.js"
 }

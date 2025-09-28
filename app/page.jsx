@@ -194,10 +194,11 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
   return (
     <div className="temple-container p-8 sm:p-10 mb-8 sm:mb-12 slide-up relative">
       {isLoading && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl z-10 flex items-center justify-center">
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-md rounded-xl z-10 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-athena-blue/30 border-t-athena-blue mx-auto mb-4"></div>
-            <p className="text-lg font-cinzel text-athena-blue">Processing your thoughts...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-athena-blue/20 border-t-athena-blue mx-auto mb-6"></div>
+            <p className="text-xl font-cinzel text-athena-blue mb-2">Processing your thoughts...</p>
+            <p className="text-sm text-gray-600">{loadingStep === 'azure' ? 'Analyzing with Azure AI...' : loadingStep === 'gemini' ? 'Consulting the Oracle...' : 'Preparing response...'}</p>
           </div>
         </div>
       )}
@@ -206,12 +207,12 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
       </h2>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="relative">
-          <label htmlFor="journalText" className="block text-lg sm:text-xl font-cinzel text-athena-blue mb-4 text-center">
+          <label htmlFor="journalText" className="block text-lg sm:text-xl font-cinzel text-athena-blue mb-6 text-center">
             Share Your Thoughts with the Divine
           </label>
           
           {/* Voice Recorder */}
-          <div className="mb-6">
+          <div className="mb-8">
             <VoiceRecorder 
               onTranscription={handleVoiceTranscription}
               onSentiment={handleVoiceSentiment}
@@ -220,18 +221,25 @@ const JournalForm = ({ onSubmit, isLoading, loadingStep, setLoadingStep, setIsLo
             />
           </div>
           
-          <div className="relative">
+          <div className="relative group">
             <textarea
               id="journalText"
               value={journalText}
               onChange={(e) => setJournalText(e.target.value)}
               placeholder="Speak your truth, mortal. What weighs upon your heart and mind? Share your deepest thoughts, fears, hopes, and dreams..."
-              className={`w-full h-48 sm:h-56 p-6 border-2 border-gold-main/30 rounded-xl resize-none focus:outline-none focus:border-gold-main text-gray-800 placeholder-gray-500 text-base sm:text-lg leading-relaxed transition-all duration-300 hover:border-gold-main/50 ${isLoading ? 'opacity-60 loading-breathe' : ''}`}
+              className={`w-full h-48 sm:h-56 p-6 border-2 border-gold-main/30 rounded-xl resize-none focus:outline-none focus:border-gold-main text-gray-800 placeholder-gray-500 text-base sm:text-lg leading-relaxed transition-all duration-300 hover:border-gold-main/50 group-hover:shadow-lg bg-gradient-to-br from-white to-gray-50/50 ${isLoading ? 'opacity-60 loading-breathe' : ''}`}
               disabled={isLoading}
             />
-            <div className="absolute bottom-4 right-4 text-xs text-gray-400">
+            <div className={`absolute bottom-4 right-4 text-xs px-2 py-1 rounded-full transition-colors ${
+              journalText.length > 900 
+                ? 'text-red-600 bg-red-100' 
+                : journalText.length > 700 
+                ? 'text-yellow-600 bg-yellow-100' 
+                : 'text-gray-400 bg-white/80'
+            }`}>
               {journalText.length}/1000
             </div>
+            <div className="absolute top-4 left-4 text-2xl opacity-20">📜</div>
           </div>
         </div>
         <div className="text-center">
