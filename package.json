@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cookies-next": "^4.1.1",
     "dotenv": "^17.2.2",
