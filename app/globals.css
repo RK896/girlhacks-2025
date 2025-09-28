@@ -245,6 +245,41 @@
   }
 }
 
+@keyframes bubbleFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-8px) rotate(1deg); 
+  }
+  50% { 
+    transform: translateY(-4px) rotate(0deg); 
+  }
+  75% { 
+    transform: translateY(-12px) rotate(-1deg); 
+  }
+}
+
+@keyframes bubbleGlow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.1); 
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.5), 0 0 60px rgba(212, 175, 55, 0.2); 
+  }
+}
+
+@keyframes circlePulse {
+  0%, 100% { 
+    border-color: rgba(212, 175, 55, 0.2);
+    transform: scale(1);
+  }
+  50% { 
+    border-color: rgba(212, 175, 55, 0.4);
+    transform: scale(1.02);
+  }
+}
+
 .loading-shimmer {
   position: relative;
   overflow: hidden;
@@ -279,4 +314,16 @@
 
 .pulse-animation {
   animation: pulse 2s ease-in-out infinite;
+}
+
+.bubble-float {
+  animation: bubbleFloat 4s ease-in-out infinite;
+}
+
+.bubble-glow {
+  animation: bubbleGlow 3s ease-in-out infinite;
+}
+
+.circle-pulse {
+  animation: circlePulse 4s ease-in-out infinite;
 }

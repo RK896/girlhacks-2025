@@ -6,6 +6,10 @@ import { useAuth } from './contexts/AuthContext'
 import AuthModal from './components/AuthModal'
 import CalendarStreak from './components/CalendarStreak'
 import SentimentGraph from './components/SentimentGraph'
+import TopicAnalysis from './components/TopicAnalysis'
+import MoodTimeline from './components/MoodTimeline'
+import WordCloud from './components/WordCloud'
+import WritingPatterns from './components/WritingPatterns'
 import VoiceRecorder from './components/VoiceRecorder'
 
 // Azure AI Analysis Function
@@ -623,14 +627,24 @@ export default function Home() {
                   📜 Journal
                 </button>
                 <button
-                  onClick={() => setActiveTab('dashboard')}
+                  onClick={() => setActiveTab('journey')}
                   className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'dashboard'
+                    activeTab === 'journey'
                       ? 'bg-athena-blue text-white'
                       : 'text-gray-600 hover:text-athena-blue'
                   }`}
                 >
-                  📊 Dashboard
+                  🛤️ Journey
+                </button>
+                <button
+                  onClick={() => setActiveTab('insights')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'insights'
+                      ? 'bg-athena-blue text-white'
+                      : 'text-gray-600 hover:text-athena-blue'
+                  }`}
+                >
+                  🔍 Insights
                 </button>
               </div>
             </div>
@@ -654,13 +668,35 @@ export default function Home() {
           </>
         )}
 
-        {activeTab === 'dashboard' && currentUser && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {activeTab === 'journey' && currentUser && (
+          <div className="space-y-8">
             {/* Calendar Streak */}
             <CalendarStreak entries={entries} />
             
-            {/* Sentiment Graph */}
-            <SentimentGraph entries={entries} />
+            {/* Emotional Journey - Combined Sentiment and Mood */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {/* Sentiment Graph */}
+              <SentimentGraph entries={entries} />
+              
+              {/* Mood Timeline */}
+              <MoodTimeline entries={entries} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'insights' && currentUser && (
+          <div className="space-y-8">
+            {/* Topic Analysis and Word Cloud */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {/* Topic Analysis */}
+              <TopicAnalysis entries={entries} />
+              
+              {/* Word Cloud */}
+              <WordCloud entries={entries} />
+            </div>
+            
+            {/* Writing Patterns */}
+            <WritingPatterns entries={entries} />
           </div>
         )}
       </div>
