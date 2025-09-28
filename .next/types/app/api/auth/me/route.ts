@@ -1,4 +1,4 @@
-// File: /Users/rohit/Documents/Projects/girlhacks-2025/app/api/auth/me/route.js
+// File: /Users/rohit/Documents/Projects/girlhacks/girlhacks-2025/app/api/auth/me/route.js
 import * as entry from '../../../../../../app/api/auth/me/route.js'
 import type { NextRequest } from 'next/server.js'
 

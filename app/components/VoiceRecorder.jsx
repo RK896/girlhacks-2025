@@ -270,35 +270,44 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Recording Controls */}
-      <div className="flex justify-center space-x-4">
+      <div className="flex justify-center">
         {!permissionGranted ? (
           <button
             onClick={requestMicrophonePermission}
-            className="flex items-center space-x-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors duration-200 shadow-lg"
+            className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-medium"
           >
-            <div className="w-4 h-4 bg-white rounded-full"></div>
-            <span className="font-medium">Enable Microphone</span>
+            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+            <span>Enable Microphone</span>
+            <div className="text-xl">🎤</div>
           </button>
         ) : !isRecording ? (
           <button
             onClick={startRecording}
             disabled={isProcessing}
-            className="flex items-center space-x-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium"
           >
-            <div className="w-4 h-4 bg-white rounded-full"></div>
-            <span className="font-medium">
+            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            </div>
+            <span>
               {isProcessing ? 'Processing...' : 'Start Recording'}
             </span>
+            <div className="text-xl">{isProcessing ? '⏳' : '🎙️'}</div>
           </button>
         ) : (
           <button
             onClick={stopRecording}
-            className="flex items-center space-x-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-full transition-colors duration-200 shadow-lg"
+            className="group flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-medium"
           >
-            <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
-            <span className="font-medium">Stop Recording</span>
+            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-600 rounded-full animate-pulse"></div>
+            </div>
+            <span>Stop Recording</span>
+            <div className="text-xl">⏹️</div>
           </button>
         )}
       </div>
@@ -306,12 +315,13 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       {/* Recording Status */}
       {isRecording && (
         <div className="text-center">
-          <div className="inline-flex items-center space-x-2 text-red-600 font-medium">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+          <div className="status-indicator status-recording">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
             <span>Recording... Speak clearly for at least 2 seconds</span>
+            <div className="text-lg">🎙️</div>
           </div>
           {recordingStartTime && (
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-sm text-gray-500 mt-3 bg-gray-100 px-3 py-1 rounded-full inline-block">
               Duration: {Math.floor((Date.now() - recordingStartTime) / 1000)}s
             </div>
           )}
@@ -321,20 +331,25 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       {/* Processing Status */}
       {isProcessing && (
         <div className="text-center">
-          <div className="inline-flex items-center space-x-2 text-blue-600 font-medium">
+          <div className="status-indicator status-processing">
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             <span>Processing audio...</span>
+            <div className="text-lg">⏳</div>
           </div>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="text-center p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="text-center p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <div className="text-lg">⚠️</div>
+            <p className="text-red-800 font-medium">Error</p>
+          </div>
+          <p className="text-red-700 text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            className="mt-3 text-sm text-red-600 hover:text-red-800 underline bg-white px-3 py-1 rounded-full border border-red-200 hover:bg-red-50 transition-colors"
           >
             Dismiss
           </button>
@@ -342,16 +357,23 @@ export default function VoiceRecorder({ onTranscription, onSentiment, isRecordin
       )}
 
       {/* Instructions */}
-      <div className="text-center text-sm text-gray-600">
+      <div className="text-center text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200">
         {!permissionGranted ? (
           <div>
-            <p className="text-blue-600 font-medium">Microphone access required for voice recording</p>
-            <p className="mt-1">Click "Enable Microphone" to allow voice recording, then speak your journal entry.</p>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <div className="text-lg">🎤</div>
+              <p className="text-blue-600 font-medium">Microphone access required for voice recording</p>
+            </div>
+            <p className="text-gray-600">Click "Enable Microphone" to allow voice recording, then speak your journal entry.</p>
           </div>
         ) : (
           <div>
-            <p>Click to start recording your voice, then speak your journal entry.</p>
-            <p className="mt-1">The audio will be transcribed and analyzed for sentiment.</p>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <div className="text-lg">💬</div>
+              <p className="text-gray-700 font-medium">Voice Recording Ready</p>
+            </div>
+            <p className="text-gray-600">Click to start recording your voice, then speak your journal entry.</p>
+            <p className="text-gray-500 mt-1">The audio will be transcribed and analyzed for sentiment.</p>
           </div>
         )}
       </div>
