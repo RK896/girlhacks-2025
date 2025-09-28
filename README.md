@@ -174,6 +174,15 @@ athenas-journal/
 - Animated background elements
 - Responsive grid layouts
 
+## 🎯 Demo Features
+
+- **Email Preferences Demo**: Visit `/preferences` to see the email reminder settings interface (frontend demo only)
+- **Voice Recording**: Test browser-based speech-to-text functionality  
+- **Journal Entries**: Create and view journal entries with AI analysis
+- **Scrollable Timeline**: "Your Emotional Journey" section with custom scrollable interface
+
+## 🤝 Contributing
+
 ## 🔧 API Endpoints
 
 ### Authentication

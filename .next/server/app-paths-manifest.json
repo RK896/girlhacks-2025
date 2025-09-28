@@ -1,15 +1,16 @@
 {
-  "/_not-found": "app/_not-found.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/ai/gemini/route": "app/api/ai/gemini/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
-  "/api/debug-env/route": "app/api/debug-env/route.js",
-  "/api/test-sentiment/route": "app/api/test-sentiment/route.js",
   "/api/ai/azure/route": "app/api/ai/azure/route.js",
-  "/api/journal/entries/route": "app/api/journal/entries/route.js",
+  "/api/ai/gemini/route": "app/api/ai/gemini/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/api/auth/register/route": "app/api/auth/register/route.js",
-  "/test-sentiment/page": "app/test-sentiment/page.js",
+  "/api/debug-env/route": "app/api/debug-env/route.js",
   "/api/demo/route": "app/api/demo/route.js",
+  "/api/journal/entries/route": "app/api/journal/entries/route.js",
   "/landing/page": "app/landing/page.js",
-  "/page": "app/page.js"
+  "/api/test-sentiment/route": "app/api/test-sentiment/route.js",
+  "/page": "app/page.js",
+  "/preferences/page": "app/preferences/page.js",
+  "/test-sentiment/page": "app/test-sentiment/page.js"
 }
