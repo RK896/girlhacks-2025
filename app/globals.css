@@ -99,9 +99,9 @@
   .section-header::before {
     content: '';
     position: absolute;
-    top: 60%;
-    left: 0;
-    right: 0;
+    top: 100%;
+    left: 20%;
+    right: 20%;
     height: 2px;
     background: linear-gradient(90deg, transparent, #D4AF37, transparent);
     z-index: -1;
